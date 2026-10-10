@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Duo Games</title>
+<style>
+:root{--bg:#0e0e1f;--card:#1a1a35;--ink:#f4f4ff;--dim:#9a9ac0;--host:#ff5c8a;--guest:#5cc8ff;--good:#4cd964;--bad:#ff4d4d;--gold:#ffd93d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Roboto,sans-serif;min-height:100vh}
+section{max-width:820px;margin:0 auto;padding:20px 16px}
+h1{font-size:2.4rem;margin:.2em 0;text-align:center;background:linear-gradient(90deg,var(--host),var(--guest));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2,h3,h4{margin:.4em 0}
+.sub{color:var(--dim);text-align:center;margin-bottom:20px}
+.card{background:var(--card);border-radius:16px;padding:18px;margin:14px 0}
+input{width:100%;padding:14px;font-size:1.1rem;border-radius:12px;border:2px solid #2d2d55;background:#10102a;color:var(--ink);margin:6px 0}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:14px 18px;font-weight:700;color:#10102a;background:var(--gold);margin:4px 0}
+button.big{width:100%;font-size:1.15rem;padding:18px}
+button.alt{background:var(--guest)}button.pink{background:var(--host)}button.ghost{background:#2d2d55;color:var(--ink)}
+button:disabled{opacity:.4;cursor:default}
+.code{font-size:3rem;letter-spacing:.3em;text-align:center;font-weight:800;color:var(--gold)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.games{display:grid;grid-template-columns:1fr;gap:12px}
+.gcard{text-align:left;color:var(--ink);background:var(--card);border:2px solid #2d2d55;padding:20px}
+.gcard small{display:block;color:var(--dim);font-weight:400;margin-top:6px}
+#hud{display:flex;justify-content:space-between;color:var(--dim);font-weight:600;margin-bottom:8px}
+#cv{width:100%;border-radius:16px;background:#14142b;touch-action:none;display:block}
+.overlay{position:fixed;inset:0;background:rgba(8,8,20,.88);display:flex;align-items:center;justify-content:center;z-index:9;text-align:center;padding:24px}
+.overlay[hidden]{display:none}
+.overlay .box{max-width:420px;width:100%}
+.overlay h2{font-size:2rem}
+.timer{font:800 2.4rem ui-monospace,monospace;color:var(--bad)}
+.bhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.serial b{font:700 1.3rem ui-monospace,monospace;background:#fff;color:#000;padding:2px 8px;border-radius:6px}
+.mods{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+.mod{background:var(--card);border:3px solid #2d2d55;border-radius:14px;padding:12px}
+.mod.done{border-color:var(--good)}
+.wire{display:block;width:100%;height:22px;border-radius:11px;margin:10px 0;border:2px solid #555;padding:0}
+.wire.cut{opacity:.2;height:6px;margin:18px 0}
+.symgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sym{font-size:2rem;background:#e8e0c8;padding:10px;color:#222}
+.sym.ok{background:var(--good)}
+.bigbtn{width:120px;height:120px;border-radius:50%;font-size:.95rem;border:4px solid #000;color:#000;display:block;margin:6px auto;user-select:none;touch-action:none}
+.strip{height:14px;border-radius:7px;margin:8px auto;width:70%;background:#222}
+.strikes{font-size:1.6rem;letter-spacing:.2em}
+.manual h4{border-bottom:1px solid #2d2d55;padding-bottom:4px;margin-top:18px;color:var(--gold)}
+.manual li{margin:6px 0}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.cols div{background:#e8e0c8;color:#222;border-radius:8px;padding:6px;font-size:1.5rem;line-height:1.5}
+.flash{animation:fl .4s}@keyframes fl{0%{background:var(--bad)}100%{}}
+.tip{color:var(--dim);font-size:.9rem}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000c;padding:10px 18px;border-radius:20px;z-index:20}
+</style>
+</head>
+<body>
+
+<section id="s-home">
+  <h1>Duo Games</h1>
+  <p class="sub">Two players. Two devices. Zero accounts.</p>
+  <div class="card">
+    <label>Your name</label>
+    <input id="name" maxlength="14" placeholder="Player" autocomplete="off">
+    <button class="big pink" id="btn-create">Create a room</button>
+  </div>
+  <div class="card">
+    <label>Or join your partner's room</label>
+    <input id="joincode" maxlength="4" placeholder="CODE" autocapitalize="characters" autocomplete="off">
+    <button class="big alt" id="btn-join">Join</button>
+  </div>
+  <p class="tip" style="text-align:center">Tip: for Bomb Defusal, be on a voice or video call so you can talk.</p>
+</section>
+
+<section id="s-wait" hidden>
+  <h1>Room ready</h1>
+  <div class="card"><div class="code" id="roomcode">....</div>
+    <p class="sub">Send this link to your partner:</p>
+    <input id="link" readonly>
+    <button class="big" id="btn-copy">Copy link</button>
+  </div>
+  <p class="sub" id="waitmsg">Waiting for your partner to join...</p>
+</section>
+
+<section id="s-menu" hidden>
+  <h1>Pick a game</h1>
+  <p class="sub" id="menuwho"></p>
+  <div class="games">
+    <button class="gcard" data-game="party">Party Mode<small>5 rapid mini-games: Coin Grab, Reaction Duel, Tug of War. Most wins takes the crown.</small></button>
+    <button class="gcard" data-game="bomb">Bomb Defusal<small>One of you sees the bomb, the other has the manual. Talk fast. You swap roles every round.</small></button>
+  </div>
+</section>
+
+<section id="s-party" hidden>
+  <div id="hud"><span id="hud-r"></span><span id="hud-s"></span></div>
+  <canvas id="cv" width="640" height="400"></canvas>
+  <p class="tip" id="tip"></p>
+</section>
+
+<section id="s-bomb" hidden><div id="bomb"></div></section>
+
+<div class="overlay" id="banner" hidden><div class="box"><p class="tip" id="b-small"></p><h2 id="b-title"></h2><p id="b-text"></p></div></div>
+<div class="overlay" id="end" hidden><div class="box"><h2 id="e-title"></h2><p id="e-text"></p>
+  <button class="big pink" data-req="again">Play again</button>
+  <button class="big ghost" data-req="menu">Back to menu</button></div></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+let peer,conn,isHost=false,me='host',names={host:'Player 1',guest:'Player 2'},rtt=0,code='',gotHello=false;
+const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]};
+let P=null,B=null,cur=null,lastDef=null;
+
+function show(id){document.querySelectorAll('section').forEach(s=>s.hidden=s.id!==id)}
+function send(m){if(conn&&conn.open)conn.send(m)}
+function toast(t,ms=2500){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),ms)}
+function myName(){return ($('#name').value.trim()||'Player').slice(0,14)}
+const other=r=>r==='host'?'guest':'host';
+
+/* ---------- networking ---------- */
+function rndCode(){const L='ABCDEFGHJKLMNPQRSTUVWXYZ';let s='';for(let i=0;i<4;i++)s+=L[Math.floor(Math.random()*L.length)];return s}
+function createRoom(){
+  isHost=true;me='host';code=rndCode();
+  peer=new Peer('duogames-'+code,{config:ICE});
+  peer.on('open',()=>{
+    $('#roomcode').textContent=code;
+    $('#link').value=location.origin+location.pathname+'?join='+code;
+    show('s-wait');
+  });
+  peer.on('error',e=>{if(e.type==='unavailable-id'){peer.destroy();createRoom()}else toast('Network error: '+e.type,5000)});
+  peer.on('connection',c=>{if(conn){c.close();return}conn=c;wire()});
+}
+function joinRoom(c){
+  c=(c||'').trim().toUpperCase();if(c.length!==4)return toast('Enter the 4-letter code');
+  isHost=false;me='guest';
+  peer=new Peer(undefined,{config:ICE});
+  peer.on('open',()=>{conn=peer.connect('duogames-'+c,{reliable:true});wire();show('s-wait');$('#roomcode').textContent=c;$('#waitmsg').textContent='Connecting...'});
+  peer.on('error',e=>{toast(e.type==='peer-unavailable'?'Room not found':'Network error: '+e.type,5000);if(e.type==='peer-unavailable')show('s-home')});
+}
+function wire(){
+  conn.on('open',()=>{names[me]=myName();send({t:'hello',role:me,name:myName()});if(isHost)send({t:'ping',ts:performance.now()})});
+  conn.on('data',onData);
+  conn.on('close',()=>{toast('Your partner left the room',4000);setTimeout(()=>location.href=location.pathname,1800)});
+}
+function onData(m){
+  switch(m.t){
+    case 'hello':names[m.role]=m.name;if(names.host===names.guest)names[m.role]=m.name+' 2';if(!gotHello){gotHello=true;toMenu()}break;
+    case 'ping':send({t:'pong',ts:m.ts});break;
+    case 'pong':rtt=performance.now()-m.ts;send({t:'rtt',v:rtt});break;
+    case 'rtt':rtt=m.v;break;
+    case 'req':if(isHost)handleReq(m.game);break;
+    case 'menu':toMenu();break;
+    case 'party':partyStart(m.rounds);break;
+    case 'mg':runMG(m.kind,m.i);break;
+    case 'mgend':mgEnd(m);break;
+    case 'pfinal':pFinal(m.score);break;
+    case 'bomb':startBomb(m.seed,m.defuser);break;
+    case 'b':if(B){B.strikes=m.strikes;B.solved=m.solved;updExpert()}break;
+    case 'bend':bombEnd(m.win,m.reason);break;
+    default:if(cur&&cur.msg)cur.msg(m);
+  }
+}
+function toMenu(){
+  cur=null;if(B&&B.iv)clearInterval(B.iv);B=null;
+  $('#end').hidden=true;$('#banner').hidden=true;
+  $('#menuwho').textContent=`${names.host} & ${names.guest}`;show('s-menu');
+}
+function request(g){if(isHost)handleReq(g);else send({t:'req',game:g})}
+function handleReq(g){
+  if(g==='menu'){send({t:'menu'});toMenu()}
+  else if(g==='party'){const r=shuffle(['coin','react','tug','coin','react']);send({t:'party',rounds:r});partyStart(r)}
+  else if(g==='bomb'){
+    const d=lastDef?other(lastDef):(Math.random()<.5?'host':'guest');
+    const seed=Math.floor(Math.random()*2**31);send({t:'bomb',seed,defuser:d});startBomb(seed,d);
+  }
+  else if(g==='again'){handleReq(P&&!B?'party':'bomb')}
+}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+/* ---------- shared UI bits ---------- */
+function banner(small,title,text,ms){
+  $('#b-small').textContent=small||'';$('#b-title').textContent=title;$('#b-text').textContent=text||'';$('#banner').hidden=false;
+  if(ms)setTimeout(()=>{$('#banner').hidden=true},ms);
+}
+function endCard(title,text){$('#banner').hidden=true;$('#e-title').textContent=title;$('#e-text').textContent=text;$('#end').hidden=false}
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-game]');if(g)request(g.dataset.game);
+  const r=e.target.closest('[data-req]');if(r){$('#end').hidden=true;request(r.dataset.req)}
+});
+
+/* ---------- input ---------- */
+const keys={};let joy=null;
+const cv=$('#cv'),ctx=cv.getContext('2d');
+addEventListener('keydown',e=>{
+  keys[e.key.toLowerCase()]=true;
+  if(cur&&cur.run){
+    if(e.code==='Space'){e.preventDefault();if(!e.repeat&&cur.tap)cur.tap()}
+    if(e.key.startsWith('Arrow'))e.preventDefault();
+  }
+});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
+cv.addEventListener('pointerdown',e=>{joy={x:e.clientX,y:e.clientY,dx:0,dy:0};if(cur&&cur.run&&cur.tap)cur.tap()});
+addEventListener('pointermove',e=>{if(joy){joy.dx=e.clientX-joy.x;joy.dy=e.clientY-joy.y}});
+addEventListener('pointerup',()=>{joy=null});
+
+/* ---------- party mode ---------- */
+function partyStart(rounds){P={rounds,i:-1,score:{host:0,guest:0}};B=null;$('#end').hidden=true;show('s-party');hud();if(isHost)setTimeout(nextMG,300)}
+function hud(){
+  if(!P)return;
+  $('#hud-r').textContent=`Round ${Math.max(1,P.i+1)}/${P.rounds.length}`;
+  $('#hud-s').textContent=`${names.host} ${P.score.host} - ${P.score.guest} ${names.guest}`;
+}
+function nextMG(){
+  const i=P.i+1;
+  if(i>=P.rounds.length){send({t:'pfinal',score:P.score});pFinal(P.score);return}
+  send({t:'mg',kind:P.rounds[i],i});runMG(P.rounds[i],i);
+}
+function runMG(kind,i){
+  P.i=i;cur=Object.create(MG[kind]);cur.run=false;cur.init();hud();
+  $('#tip').textContent=MG[kind].hint;
+  banner(`Round ${i+1} of ${P.rounds.length}`,MG[kind].name,MG[kind].hint);
+  const c=cur;setTimeout(()=>{if(cur===c){c.run=true;$('#banner').hidden=true}},2600);
+}
+function endMG(winner,info){
+  if(!cur||cur.done)return;cur.done=true;cur.run=false;
+  if(winner!=='tie')P.score[winner]++;
+  const m={t:'mgend',winner,score:P.score,info:info||''};send(m);mgEnd(m);
+  setTimeout(nextMG,3600);
+}
+function mgEnd(m){
+  P.score=m.score;if(cur){cur.run=false;cur.done=true}hud();
+  const t=m.winner==='tie'?"It's a tie!":m.winner===me?'You win this round! 🎉':`${names[m.winner]} wins this round`;
+  banner('',t,m.info,3300);
+}
+function pFinal(s){
+  cur=null;const w=s.host>s.guest?'host':s.guest>s.host?'guest':'tie';
+  endCard(w==='tie'?'Draw! 🤝':w===me?'You win the night! 👑':`${names[w]} wins the night! 👑`,`${names.host} ${s.host} - ${s.guest} ${names.guest}`);
+}
+const MG={};
+const W=640,H=400;
+function txt(t,x,y,size=28,col='#fff',al='center'){ctx.fillStyle=col;ctx.font=`800 ${size}px system-ui`;ctx.textAlign=al;ctx.fillText(t,x,y)}
+const pcol=r=>r==='host'?'#ff5c8a':'#5cc8ff';
+
+MG.coin={name:'Coin Grab',hint:'Grab the most coins in 20 seconds! Move with WASD/arrows, or drag on the screen.',
+  init(){this.me={x:me==='host'?110:530,y:200};this.ot={x:me==='host'?530:110,y:200};this.coins=[];this.s=[0,0];this.tl=20;this.nid=0;this.sp=0;this.sendT=0},
+  update(dt){
+    let vx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),vy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
+    if(joy){vx=joy.dx/50;vy=joy.dy/50}
+    const l=Math.hypot(vx,vy);if(l>1){vx/=l;vy/=l}
+    this.me.x=Math.max(16,Math.min(W-16,this.me.x+vx*230*dt));this.me.y=Math.max(16,Math.min(H-16,this.me.y+vy*230*dt));
+    this.sendT+=dt;if(this.sendT>.05){this.sendT=0;send({t:'pos',x:this.me.x,y:this.me.y})}
+    if(!isHost)return;
+    this.sp-=dt;if(this.sp<=0&&this.coins.length<6){this.sp=.5+Math.random()*.5;this.coins.push({id:this.nid++,x:30+Math.random()*(W-60),y:30+Math.random()*(H-60)})}
+    this.coins=this.coins.filter(c=>{
+      if(Math.hypot(c.x-this.me.x,c.y-this.me.y)<28){this.s[0]++;return false}
+      if(Math.hypot(c.x-this.ot.x,c.y-this.ot.y)<28){this.s[1]++;return false}
+      return true});
+    this.tl-=dt;this.bT=(this.bT||0)+dt;
+    if(this.bT>.05){this.bT=0;send({t:'cs',c:this.coins,s:this.s,tl:this.tl})}
+    if(this.tl<=0){send({t:'cs',c:this.coins,s:this.s,tl:0});endMG(this.s[0]>this.s[1]?'host':this.s[1]>this.s[0]?'guest':'tie',`${this.s[0]} - ${this.s[1]} coins`)}
+  },
+  draw(){
+    ctx.clearRect(0,0,W,H);
+    this.coins.forEach(c=>{ctx.fillStyle='#ffd93d';ctx.beginPath();ctx.arc(c.x,c.y,10,0,7);ctx.fill();ctx.strokeStyle='#b8941a';ctx.lineWidth=3;ctx.stroke()});
+    [[this.me,me],[this.ot,other(me)]].forEach(([p,r])=>{ctx.fillStyle=pcol(r);ctx.beginPath();ctx.arc(p.x,p.y,16,0,7);ctx.fill();
+      if(r===me){ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.stroke()}});
+    txt(this.s[0],60,50,40,pcol('host'));txt(this.s[1],W-60,50,40,pcol('guest'));
+    txt(Math.max(0,Math.ceil(this.tl)),W/2,50,40,'#fff');
+  },
+  msg(m){if(m.t==='pos')this.ot={x:m.x,y:m.y};if(m.t==='cs'&&!isHost){this.coins=m.c;this.s=m.s;this.tl=m.tl}}
+};
+
+MG.react={name:'Reaction Duel',hint:'Wait for GREEN, then tap or press Space. Tap too early and you lose!',
+  init(){this.st='wait';this.t=0;this.delay=2+Math.random()*3;this.res={}},
+  update(dt){
+    this.t+=dt;
+    if(isHost&&this.st==='wait'&&this.t>this.delay){this.st='go';this.goT=performance.now();this.gT=0;send({t:'rgo'})}
+    if(isHost&&this.goT){this.gT+=dt;if(this.gT>6)this.decide()}
+  },
+  tap(){
+    if(this.st==='wait'){this.st='early';this.report(-1)}
+    else if(this.st==='go'){const ms=Math.round(performance.now()-this.goT-(isHost?0:rtt/2));this.st='done';this.ms=ms;this.report(ms)}
+  },
+  report(v){if(isHost){this.res.host=v;this.decide()}else send({t:'rr',v})},
+  decide(){
+    if(this.done)return;const a=this.res.host,b=this.res.guest;
+    if(a===-1&&b===-1)return endMG('tie','Both jumped the gun!');
+    if(a===-1)return endMG('guest',`${names.host} tapped too early`);
+    if(b===-1)return endMG('host',`${names.guest} tapped too early`);
+    if(a!==undefined&&b!==undefined)return endMG(a<b?'host':b<a?'guest':'tie',`${a}ms vs ${b}ms`);
+    if(this.gT>6){if(a!==undefined)endMG('host',`${a}ms`);else if(b!==undefined)endMG('guest',`${b}ms`);else endMG('tie','Nobody tapped')}
+  },
+  draw(){
+    const c={wait:'#b3202a',go:'#1fb84a',early:'#6a1b1b',done:'#1a6a3a'}[this.st];
+    ctx.fillStyle=c;ctx.fillRect(0,0,W,H);
+    txt({wait:'Wait...',go:'TAP!',early:'Too early!',done:(this.ms||0)+' ms'}[this.st],W/2,H/2+14,64);
+  },
+  msg(m){if(m.t==='rgo'){this.st='go';this.goT=performance.now()}if(m.t==='rr'&&isHost){this.res.guest=m.v;this.decide()}}
+};
+
+MG.tug={name:'Tug of War',hint:'Mash Space or tap the screen as fast as you can! Pull the knot to your side.',
+  init(){this.pos=0;this.tl=10},
+  tap(){
+    if(isHost){this.pos=Math.min(100,this.pos+4);this.bc()}else send({t:'tap'});
+  },
+  bc(){send({t:'tug',pos:this.pos,tl:this.tl});this.chk()},
+  chk(){if(Math.abs(this.pos)>=100||this.tl<=0){endMG(this.pos>0?'host':this.pos<0?'guest':'tie',this.pos===0?'Dead even':`Won by ${Math.abs(Math.round(this.pos))}`)}},
+  update(dt){if(isHost){this.tl-=dt;this.t2=(this.t2||0)+dt;if(this.t2>.1){this.t2=0;this.bc()}}},
+  draw(){
+    ctx.clearRect(0,0,W,H);
+    const x=W/2+this.pos*2.8;
+    ctx.fillStyle='#2d2d55';ctx.fillRect(40,H/2-6,W-80,12);
+    ctx.fillStyle=pcol('host');ctx.fillRect(40,H/2-30,10,60);ctx.fillStyle=pcol('guest');ctx.fillRect(W-50,H/2-30,10,60);
+    ctx.fillStyle='#ffd93d';ctx.beginPath();ctx.arc(x,H/2,24,0,7);ctx.fill();
+    txt(names.host,100,H/2+80,22,pcol('host'));txt(names.guest,W-100,H/2+80,22,pcol('guest'));
+    txt(Math.max(0,Math.ceil(this.tl)),W/2,60,48);
+    txt('MASH!',W/2,H-40,34,'#9a9ac0');
+  },
+  msg(m){
+    if(m.t==='tap'&&isHost){this.pos=Math.max(-100,this.pos-4);this.bc()}
+    if(m.t==='tug'&&!isHost){this.pos=m.pos;this.tl=m.tl}
+  }
+};
+
+let last=0;
+function loop(t){
+  const dt=Math.min(.05,(t-last)/1000);last=t;
+  if(cur&&P&&!B){if(cur.run)cur.update(dt);if(cur.draw)cur.draw()}
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ---------- bomb defusal ---------- */
+const WC=['red','blue','yellow','black','white'];
+const WCSS={red:'#ff4d4d',blue:'#4d8dff',yellow:'#ffd93d',black:'#222',white:'#f5f5f5'};
+const SYM=['★','☾','☀','♣','♠','♥','♦','☂','☎','✿','⚡','☢','✈','♫','⚓','✂','❄','☯','✪','⌘'];
+const cnt=(w,c)=>w.filter(x=>x===c).length,lastIdx=(w,c)=>w.lastIndexOf(c);
+const WR={
+3:[["If there are no red wires, cut the second wire.",w=>cnt(w,'red')==0,()=>1],
+   ["Otherwise, if the last wire is white, cut the last wire.",w=>w[2]=='white',()=>2],
+   ["Otherwise, if there is more than one blue wire, cut the last blue wire.",w=>cnt(w,'blue')>1,w=>lastIdx(w,'blue')],
+   ["Otherwise, cut the last wire.",()=>true,()=>2]],
+4:[["If there is more than one red wire and the serial's last digit is odd, cut the last red wire.",(w,o)=>cnt(w,'red')>1&&o,w=>lastIdx(w,'red')],
+   ["Otherwise, if the last wire is yellow and there are no red wires, cut the first wire.",w=>w[3]=='yellow'&&cnt(w,'red')==0,()=>0],
+   ["Otherwise, if there is exactly one blue wire, cut the first wire.",w=>cnt(w,'blue')==1,()=>0],
+   ["Otherwise, if there is more than one yellow wire, cut the last wire.",w=>cnt(w,'yellow')>1,()=>3],
+   ["Otherwise, cut the second wire.",()=>true,()=>1]],
+5:[["If the last wire is black and the serial's last digit is odd, cut the fourth wire.",(w,o)=>w[4]=='black'&&o,()=>3],
+   ["Otherwise, if there is exactly one red wire and more than one yellow wire, cut the first wire.",w=>cnt(w,'red')==1&&cnt(w,'yellow')>1,()=>0],
+   ["Otherwise, if there are no black wires, cut the second wire.",w=>cnt(w,'black')==0,()=>1],
+   ["Otherwise, cut the first wire.",()=>true,()=>0]],
+6:[["If there are no yellow wires and the serial's last digit is odd, cut the third wire.",(w,o)=>cnt(w,'yellow')==0&&o,()=>2],
+   ["Otherwise, if there is exactly one yellow wire and more than one white wire, cut the fourth wire.",w=>cnt(w,'yellow')==1&&cnt(w,'white')>1,()=>3],
+   ["Otherwise, if there are no red wires, cut the last wire.",w=>cnt(w,'red')==0,()=>5],
+   ["Otherwise, cut the fourth wire.",()=>true,()=>3]]};
+function wireSol(w,o){const r=WR[w.length].find(r=>r[1](w,o));return r[2](w,o)}
+function btnMode(b){
+  if(b.bcolor==='blue'&&b.blabel==='ABORT')return 'hold';
+  if(b.blabel==='DETONATE'&&b.odd)return 'tap';
+  if(b.bcolor==='yellow')return 'hold';
+  return 'tap';
+}
+const STRIP={blue:4,white:1,yellow:5,red:1};
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gen(seed){
+  const r=rng(seed),pick=a=>a[Math.floor(r()*a.length)];
+  const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+  const L='ABCDEFGHJKLMNPRSTUVXZ';let serial='';
+  for(let i=0;i<3;i++)serial+=pick([...L]);for(let i=0;i<3;i++)serial+=Math.floor(r()*10);
+  const odd=(+serial[5])%2===1;
+  const n=3+Math.floor(r()*4),wires=Array.from({length:n},()=>pick(WC));
+  const cols=[sh(SYM).slice(0,7),sh(SYM).slice(0,7),sh(SYM).slice(0,7)];
+  const ci=Math.floor(r()*3);let shown,tries=0;
+  do{shown=sh(cols[ci]).slice(0,4)}while(tries++<50&&cols.some((c,k)=>k!==ci&&shown.every(s=>c.includes(s))));
+  const order=shown.slice().sort((a,b)=>cols[ci].indexOf(a)-cols[ci].indexOf(b));
+  return {serial,odd,wires,cols,shown,order,bcolor:pick(['red','blue','yellow','white']),blabel:pick(['ABORT','DETONATE','HOLD','PRESS']),strip:pick(['blue','white','yellow','red'])};
+}
+const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+const rem=()=>Math.max(0,B.dur-(performance.now()-B.t0)/1000);
+
+function startBomb(seed,defuser){
+  P=null;cur=null;lastDef=defuser;$('#end').hidden=true;$('#banner').hidden=true;
+  B={bomb:gen(seed),role:defuser===me?'defuser':'expert',t0:performance.now(),dur:240,strikes:0,solved:[false,false,false],over:false,cut:[],prog:0};
+  B.wsol=wireSol(B.bomb.wires,B.bomb.odd);
+  show('s-bomb');
+  B.role==='defuser'?renderDefuser():renderExpert();
+  B.iv=setInterval(tickBomb,200);tickBomb();
+}
+function tickBomb(){
+  if(!B)return;const r=Math.ceil(rem());
+  const el=$('#btimer');if(el)el.textContent=fmt(r);
+  if(B.role==='defuser'&&!B.over&&r<=0)finish(false,"Time ran out. BOOM!");
+}
+function strikesTxt(){return '✖'.repeat(B.strikes)+'<span style="opacity:.25">'+'✖'.repeat(3-B.strikes)+'</span>'}
+function sync(){send({t:'b',strikes:B.strikes,solved:B.solved})}
+function strike(){
+  if(B.over)return;B.strikes++;$('#strikes').innerHTML=strikesTxt();document.body.classList.add('flash');setTimeout(()=>document.body.classList.remove('flash'),400);
+  sync();if(B.strikes>=3)finish(false,'Three strikes. BOOM!');
+}
+function solve(i){
+  B.solved[i]=true;$('#m'+i).classList.add('done');sync();
+  if(B.solved.every(Boolean))finish(true,'Bomb defused!');
+}
+function finish(win,reason){if(B.over)return;send({t:'bend',win,reason});bombEnd(win,reason)}
+function bombEnd(win,reason){
+  if(!B)return;B.over=true;clearInterval(B.iv);
+  endCard(win?'Defused! 🎉':'💥 BOOM',reason+(B.role==='defuser'?' Next round you swap roles.':' Next round you swap roles.'));
+}
+function renderDefuser(){
+  const b=B.bomb;
+  $('#bomb').innerHTML=`<div class="bhead"><div class="serial">SERIAL <b>${b.serial}</b></div><div class="timer" id="btimer"></div><div class="strikes" style="color:var(--bad)" id="strikes">${strikesTxt()}</div></div>
+  <div class="mods">
+   <div class="mod" id="m0"><h4>Wires</h4><div id="wires"></div></div>
+   <div class="mod" id="m1"><h4>Symbols</h4><div class="symgrid" id="syms"></div></div>
+   <div class="mod" id="m2"><h4>Button</h4><div class="strip" id="strip"></div><button class="bigbtn" id="bigbtn" style="background:${WCSS[b.bcolor]}">${b.blabel}</button></div>
+  </div>
+  <p class="tip">You can see the bomb but not the manual. Describe everything to your partner, out loud!</p>`;
+  b.wires.forEach((c,i)=>{const w=document.createElement('button');w.className='wire';w.style.background=WCSS[c];
+    w.onclick=()=>{if(B.over||B.solved[0]||B.cut[i])return;B.cut[i]=true;w.classList.add('cut');i===B.wsol?solve(0):strike()};$('#wires').appendChild(w)});
+  b.shown.forEach(s=>{const x=document.createElement('button');x.className='sym';x.textContent=s;
+    x.onclick=()=>{if(B.over||B.solved[1]||x.classList.contains('ok'))return;
+      if(s===b.order[B.prog]){x.classList.add('ok');B.prog++;if(B.prog===4)solve(1)}else strike()};$('#syms').appendChild(x)});
+  const bb=$('#bigbtn');let t0=0;
+  bb.addEventListener('pointerdown',e=>{if(B.over||B.solved[2])return;e.preventDefault();t0=performance.now();$('#strip').style.background=WCSS[b.strip]});
+  const up=()=>{
+    if(!t0||B.over||B.solved[2])return;const held=performance.now()-t0;t0=0;$('#strip').style.background='#222';
+    if(btnMode(b)==='tap'){held<600?solve(2):strike()}
+    else{(held>=600&&Math.ceil(rem())%10===STRIP[b.strip])?solve(2):strike()}
+  };
+  bb.addEventListener('pointerup',up);bb.addEventListener('pointerleave',up);
+}
+function renderExpert(){
+  const b=B.bomb;
+  let h=`<div class="bhead"><div class="timer" id="btimer"></div><div class="strikes" style="color:var(--bad)" id="strikes">${strikesTxt()}</div><div id="estat" class="tip"></div></div>
+  <div class="card manual"><h3>Bomb Defusal Manual</h3>
+  <p class="tip">Your partner sees the bomb. Ask them for the serial number, wire colors, symbols and button, then tell them what to do. The serial's last digit is odd or even.</p>
+  <h4>Wires (ask: how many, what colors, in order from top)</h4>`;
+  for(const n of [3,4,5,6])h+=`<b>${n} wires</b><ul>${WR[n].map(r=>`<li>${r[0]}</li>`).join('')}</ul>`;
+  h+=`<h4>Symbols (press in the order they appear in the column that contains all 4)</h4><div class="cols">${b.cols.map(c=>`<div>${c.join('<br>')}</div>`).join('')}</div>
+  <h4>The Button</h4><ol>
+   <li>If the button is blue and says ABORT, hold it.</li>
+   <li>Otherwise, if it says DETONATE and the serial's last digit is odd, press and release immediately.</li>
+   <li>Otherwise, if the button is yellow, hold it.</li>
+   <li>Otherwise, press and release immediately.</li></ol>
+  <p><b>Holding:</b> a colored strip lights up while held. Release when the timer's last seconds digit matches: <b>blue 4, white 1, yellow 5, red 1</b>. (Hold for at least a second first.)</p></div>`;
+  $('#bomb').innerHTML=h;updExpert();
+}
+function updExpert(){
+  const s=$('#strikes');if(s)s.innerHTML=strikesTxt();
+  const e=$('#estat');if(e)e.textContent=`Wires ${B.solved[0]?'✓':'·'}  Symbols ${B.solved[1]?'✓':'·'}  Button ${B.solved[2]?'✓':'·'}`;
+}
+
+/* ---------- boot ---------- */
+$('#btn-create').onclick=createRoom;
+$('#btn-join').onclick=()=>joinRoom($('#joincode').value);
+$('#btn-copy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText($('#link').value).then(()=>toast('Link copied!'),()=>{$('#link').select()})};
+try{$('#name').value=localStorage.getItem('duoname')||''}catch(e){}
+$('#name').onchange=()=>{try{localStorage.setItem('duoname',$('#name').value)}catch(e){}};
+const jp=new URLSearchParams(location.search).get('join');
+if(jp){$('#joincode').value=jp.toUpperCase();$('#btn-join').textContent='Join room '+jp.toUpperCase()}
+</script>
+</body>
+</html>
