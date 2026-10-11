@@ -59,15 +59,15 @@ button:disabled{opacity:.4;cursor:default}
   <p class="sub">Two players. Two devices. Zero accounts.</p>
   <div class="card">
     <label>Your name</label>
-    <input id="name" maxlength="14" placeholder="Player" autocomplete="off">
+    <input id="name" maxlength="14" placeholder="Type your name" autocomplete="off">
     <button class="big pink" id="btn-create">Create a room</button>
   </div>
-  <div class="card">
-    <label>Or join your partner's room</label>
+  <div class="card" id="card-join">
+    <label id="joinlabel">Or join your partner's room</label>
     <input id="joincode" maxlength="4" placeholder="CODE" autocapitalize="characters" autocomplete="off">
     <button class="big alt" id="btn-join">Join</button>
   </div>
-  <p class="tip" style="text-align:center">Tip: for Bomb Defusal, be on a voice or video call so you can talk.</p>
+  <p class="tip" style="text-align:center">Tip: stay on a voice or video call while you play.</p>
 </section>
 
 <section id="s-wait" hidden>
@@ -85,7 +85,6 @@ button:disabled{opacity:.4;cursor:default}
   <p class="sub" id="menuwho"></p>
   <div class="games">
     <button class="gcard" data-game="party">Party Mode<small>5 rapid mini-games: Coin Grab, Reaction Duel, Tug of War. Most wins takes the crown.</small></button>
-    <button class="gcard" data-game="bomb">Bomb Defusal<small>One of you sees the bomb, the other has the manual. Talk fast. You swap roles every round.</small></button>
   </div>
   <div class="games" id="customgames" style="margin-top:12px"></div>
 </section>
@@ -98,8 +97,6 @@ button:disabled{opacity:.4;cursor:default}
   <p class="tip" id="tip"></p>
 </section>
 
-<section id="s-bomb" hidden><div id="bomb"></div></section>
-
 <div class="overlay" id="banner" hidden><div class="box"><p class="tip" id="b-small"></p><h2 id="b-title"></h2><p id="b-text"></p></div></div>
 <div class="overlay" id="end" hidden><div class="box"><h2 id="e-title"></h2><p id="e-text"></p>
   <button class="big pink" data-req="again">Play again</button>
@@ -110,7 +107,7 @@ button:disabled{opacity:.4;cursor:default}
 const $=s=>document.querySelector(s);
 let peer,conn,isHost=false,me='host',names={host:'Player 1',guest:'Player 2'},rtt=0,code='',gotHello=false;
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]};
-let P=null,B=null,cur=null,lastDef=null,CG=null,lastCG=null;
+let P=null,cur=null,CG=null,lastCG=null;
 const GAMES={};
 
 function show(id){document.querySelectorAll('section').forEach(s=>s.hidden=s.id!==id)}
@@ -121,7 +118,9 @@ const other=r=>r==='host'?'guest':'host';
 
 /* ---------- networking ---------- */
 function rndCode(){const L='ABCDEFGHJKLMNPQRSTUVWXYZ';let s='';for(let i=0;i<4;i++)s+=L[Math.floor(Math.random()*L.length)];return s}
+function needName(){const v=$('#name').value.trim();if(!v){toast('Type your name first');$('#name').focus();return false}return true}
 function createRoom(){
+  if(!needName())return;
   isHost=true;me='host';code=rndCode();
   peer=new Peer('duogames-'+code,{config:ICE});
   peer.on('open',()=>{
@@ -133,6 +132,7 @@ function createRoom(){
   peer.on('connection',c=>{if(conn){c.close();return}conn=c;wire()});
 }
 function joinRoom(c){
+  if(!needName())return;
   c=(c||'').trim().toUpperCase();if(c.length!==4)return toast('Enter the 4-letter code');
   isHost=false;me='guest';
   peer=new Peer(undefined,{config:ICE});
@@ -158,14 +158,11 @@ function onData(m){
     case 'mg':runMG(m.kind,m.i);break;
     case 'mgend':mgEnd(m);break;
     case 'pfinal':pFinal(m.score);break;
-    case 'bomb':startBomb(m.seed,m.defuser);break;
-    case 'b':if(B){B.strikes=m.strikes;B.solved=m.solved;updExpert()}break;
-    case 'bend':bombEnd(m.win,m.reason);break;
     default:if(cur&&cur.msg)cur.msg(m);
   }
 }
 function toMenu(){
-  if(CG&&CG.destroy)CG.destroy();CG=null;cur=null;if(B&&B.iv)clearInterval(B.iv);B=null;
+  if(CG&&CG.destroy)CG.destroy();CG=null;cur=null;
   $('#end').hidden=true;$('#banner').hidden=true;
   $('#menuwho').textContent=`${names.host} & ${names.guest}`;show('s-menu');
 }
@@ -173,12 +170,8 @@ function request(g){if(isHost)handleReq(g);else send({t:'req',game:g})}
 function handleReq(g){
   if(g==='menu'){send({t:'menu'});toMenu()}
   else if(g==='party'){const r=shuffle(['coin','react','tug','coin','react']);send({t:'party',rounds:r});partyStart(r)}
-  else if(g==='bomb'){
-    const d=lastDef?other(lastDef):(Math.random()<.5?'host':'guest');
-    const seed=Math.floor(Math.random()*2**31);send({t:'bomb',seed,defuser:d});startBomb(seed,d);
-  }
   else if(GAMES[g]){const seed=Math.floor(Math.random()*2**31);send({t:'cg',id:g,seed});startCG(g,seed)}
-  else if(g==='again'){handleReq(CG?lastCG:(P&&!B?'party':'bomb'))}
+  else if(g==='again'){handleReq(CG?lastCG:'party')}
 }
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
@@ -209,7 +202,7 @@ addEventListener('pointermove',e=>{if(joy){joy.dx=e.clientX-joy.x;joy.dy=e.clien
 addEventListener('pointerup',()=>{joy=null});
 
 /* ---------- party mode ---------- */
-function partyStart(rounds){CG=null;P={rounds,i:-1,score:{host:0,guest:0}};B=null;$('#end').hidden=true;show('s-party');hud();if(isHost)setTimeout(nextMG,300)}
+function partyStart(rounds){CG=null;P={rounds,i:-1,score:{host:0,guest:0}};$('#end').hidden=true;show('s-party');hud();if(isHost)setTimeout(nextMG,300)}
 function hud(){
   if(!P)return;
   $('#hud-r').textContent=`Round ${Math.max(1,P.i+1)}/${P.rounds.length}`;
@@ -330,130 +323,10 @@ MG.tug={name:'Tug of War',hint:'Mash Space or tap the screen as fast as you can!
 let last=0;
 function loop(t){
   const dt=Math.min(.05,(t-last)/1000);last=t;
-  if(cur&&P&&!B){if(cur.run)cur.update(dt);if(cur.draw)cur.draw()}
+  if(cur&&P){if(cur.run)cur.update(dt);if(cur.draw)cur.draw()}
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-
-/* ---------- bomb defusal ---------- */
-const WC=['red','blue','yellow','black','white'];
-const WCSS={red:'#ff4d4d',blue:'#4d8dff',yellow:'#ffd93d',black:'#222',white:'#f5f5f5'};
-const SYM=['★','☾','☀','♣','♠','♥','♦','☂','☎','✿','⚡','☢','✈','♫','⚓','✂','❄','☯','✪','⌘'];
-const cnt=(w,c)=>w.filter(x=>x===c).length,lastIdx=(w,c)=>w.lastIndexOf(c);
-const WR={
-3:[["If there are no red wires, cut the second wire.",w=>cnt(w,'red')==0,()=>1],
-   ["Otherwise, if the last wire is white, cut the last wire.",w=>w[2]=='white',()=>2],
-   ["Otherwise, if there is more than one blue wire, cut the last blue wire.",w=>cnt(w,'blue')>1,w=>lastIdx(w,'blue')],
-   ["Otherwise, cut the last wire.",()=>true,()=>2]],
-4:[["If there is more than one red wire and the serial's last digit is odd, cut the last red wire.",(w,o)=>cnt(w,'red')>1&&o,w=>lastIdx(w,'red')],
-   ["Otherwise, if the last wire is yellow and there are no red wires, cut the first wire.",w=>w[3]=='yellow'&&cnt(w,'red')==0,()=>0],
-   ["Otherwise, if there is exactly one blue wire, cut the first wire.",w=>cnt(w,'blue')==1,()=>0],
-   ["Otherwise, if there is more than one yellow wire, cut the last wire.",w=>cnt(w,'yellow')>1,()=>3],
-   ["Otherwise, cut the second wire.",()=>true,()=>1]],
-5:[["If the last wire is black and the serial's last digit is odd, cut the fourth wire.",(w,o)=>w[4]=='black'&&o,()=>3],
-   ["Otherwise, if there is exactly one red wire and more than one yellow wire, cut the first wire.",w=>cnt(w,'red')==1&&cnt(w,'yellow')>1,()=>0],
-   ["Otherwise, if there are no black wires, cut the second wire.",w=>cnt(w,'black')==0,()=>1],
-   ["Otherwise, cut the first wire.",()=>true,()=>0]],
-6:[["If there are no yellow wires and the serial's last digit is odd, cut the third wire.",(w,o)=>cnt(w,'yellow')==0&&o,()=>2],
-   ["Otherwise, if there is exactly one yellow wire and more than one white wire, cut the fourth wire.",w=>cnt(w,'yellow')==1&&cnt(w,'white')>1,()=>3],
-   ["Otherwise, if there are no red wires, cut the last wire.",w=>cnt(w,'red')==0,()=>5],
-   ["Otherwise, cut the fourth wire.",()=>true,()=>3]]};
-function wireSol(w,o){const r=WR[w.length].find(r=>r[1](w,o));return r[2](w,o)}
-function btnMode(b){
-  if(b.bcolor==='blue'&&b.blabel==='ABORT')return 'hold';
-  if(b.blabel==='DETONATE'&&b.odd)return 'tap';
-  if(b.bcolor==='yellow')return 'hold';
-  return 'tap';
-}
-const STRIP={blue:4,white:1,yellow:5,red:1};
-function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-function gen(seed){
-  const r=rng(seed),pick=a=>a[Math.floor(r()*a.length)];
-  const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
-  const L='ABCDEFGHJKLMNPRSTUVXZ';let serial='';
-  for(let i=0;i<3;i++)serial+=pick([...L]);for(let i=0;i<3;i++)serial+=Math.floor(r()*10);
-  const odd=(+serial[5])%2===1;
-  const n=3+Math.floor(r()*4),wires=Array.from({length:n},()=>pick(WC));
-  const cols=[sh(SYM).slice(0,7),sh(SYM).slice(0,7),sh(SYM).slice(0,7)];
-  const ci=Math.floor(r()*3);let shown,tries=0;
-  do{shown=sh(cols[ci]).slice(0,4)}while(tries++<50&&cols.some((c,k)=>k!==ci&&shown.every(s=>c.includes(s))));
-  const order=shown.slice().sort((a,b)=>cols[ci].indexOf(a)-cols[ci].indexOf(b));
-  return {serial,odd,wires,cols,shown,order,bcolor:pick(['red','blue','yellow','white']),blabel:pick(['ABORT','DETONATE','HOLD','PRESS']),strip:pick(['blue','white','yellow','red'])};
-}
-const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-const rem=()=>Math.max(0,B.dur-(performance.now()-B.t0)/1000);
-
-function startBomb(seed,defuser){
-  P=null;CG=null;cur=null;lastDef=defuser;$('#end').hidden=true;$('#banner').hidden=true;
-  B={bomb:gen(seed),role:defuser===me?'defuser':'expert',t0:performance.now(),dur:240,strikes:0,solved:[false,false,false],over:false,cut:[],prog:0};
-  B.wsol=wireSol(B.bomb.wires,B.bomb.odd);
-  show('s-bomb');
-  B.role==='defuser'?renderDefuser():renderExpert();
-  B.iv=setInterval(tickBomb,200);tickBomb();
-}
-function tickBomb(){
-  if(!B)return;const r=Math.ceil(rem());
-  const el=$('#btimer');if(el)el.textContent=fmt(r);
-  if(B.role==='defuser'&&!B.over&&r<=0)finish(false,"Time ran out. BOOM!");
-}
-function strikesTxt(){return '✖'.repeat(B.strikes)+'<span style="opacity:.25">'+'✖'.repeat(3-B.strikes)+'</span>'}
-function sync(){send({t:'b',strikes:B.strikes,solved:B.solved})}
-function strike(){
-  if(B.over)return;B.strikes++;$('#strikes').innerHTML=strikesTxt();document.body.classList.add('flash');setTimeout(()=>document.body.classList.remove('flash'),400);
-  sync();if(B.strikes>=3)finish(false,'Three strikes. BOOM!');
-}
-function solve(i){
-  B.solved[i]=true;$('#m'+i).classList.add('done');sync();
-  if(B.solved.every(Boolean))finish(true,'Bomb defused!');
-}
-function finish(win,reason){if(B.over)return;send({t:'bend',win,reason});bombEnd(win,reason)}
-function bombEnd(win,reason){
-  if(!B)return;B.over=true;clearInterval(B.iv);
-  endCard(win?'Defused! 🎉':'💥 BOOM',reason+(B.role==='defuser'?' Next round you swap roles.':' Next round you swap roles.'));
-}
-function renderDefuser(){
-  const b=B.bomb;
-  $('#bomb').innerHTML=`<div class="bhead"><div class="serial">SERIAL <b>${b.serial}</b></div><div class="timer" id="btimer"></div><div class="strikes" style="color:var(--bad)" id="strikes">${strikesTxt()}</div></div>
-  <div class="mods">
-   <div class="mod" id="m0"><h4>Wires</h4><div id="wires"></div></div>
-   <div class="mod" id="m1"><h4>Symbols</h4><div class="symgrid" id="syms"></div></div>
-   <div class="mod" id="m2"><h4>Button</h4><div class="strip" id="strip"></div><button class="bigbtn" id="bigbtn" style="background:${WCSS[b.bcolor]}">${b.blabel}</button></div>
-  </div>
-  <p class="tip">You can see the bomb but not the manual. Describe everything to your partner, out loud!</p>`;
-  b.wires.forEach((c,i)=>{const w=document.createElement('button');w.className='wire';w.style.background=WCSS[c];
-    w.onclick=()=>{if(B.over||B.solved[0]||B.cut[i])return;B.cut[i]=true;w.classList.add('cut');i===B.wsol?solve(0):strike()};$('#wires').appendChild(w)});
-  b.shown.forEach(s=>{const x=document.createElement('button');x.className='sym';x.textContent=s;
-    x.onclick=()=>{if(B.over||B.solved[1]||x.classList.contains('ok'))return;
-      if(s===b.order[B.prog]){x.classList.add('ok');B.prog++;if(B.prog===4)solve(1)}else strike()};$('#syms').appendChild(x)});
-  const bb=$('#bigbtn');let t0=0;
-  bb.addEventListener('pointerdown',e=>{if(B.over||B.solved[2])return;e.preventDefault();t0=performance.now();$('#strip').style.background=WCSS[b.strip]});
-  const up=()=>{
-    if(!t0||B.over||B.solved[2])return;const held=performance.now()-t0;t0=0;$('#strip').style.background='#222';
-    if(btnMode(b)==='tap'){held<600?solve(2):strike()}
-    else{(held>=600&&Math.ceil(rem())%10===STRIP[b.strip])?solve(2):strike()}
-  };
-  bb.addEventListener('pointerup',up);bb.addEventListener('pointerleave',up);
-}
-function renderExpert(){
-  const b=B.bomb;
-  let h=`<div class="bhead"><div class="timer" id="btimer"></div><div class="strikes" style="color:var(--bad)" id="strikes">${strikesTxt()}</div><div id="estat" class="tip"></div></div>
-  <div class="card manual"><h3>Bomb Defusal Manual</h3>
-  <p class="tip">Your partner sees the bomb. Ask them for the serial number, wire colors, symbols and button, then tell them what to do. The serial's last digit is odd or even.</p>
-  <h4>Wires (ask: how many, what colors, in order from top)</h4>`;
-  for(const n of [3,4,5,6])h+=`<b>${n} wires</b><ul>${WR[n].map(r=>`<li>${r[0]}</li>`).join('')}</ul>`;
-  h+=`<h4>Symbols (press in the order they appear in the column that contains all 4)</h4><div class="cols">${b.cols.map(c=>`<div>${c.join('<br>')}</div>`).join('')}</div>
-  <h4>The Button</h4><ol>
-   <li>If the button is blue and says ABORT, hold it.</li>
-   <li>Otherwise, if it says DETONATE and the serial's last digit is odd, press and release immediately.</li>
-   <li>Otherwise, if the button is yellow, hold it.</li>
-   <li>Otherwise, press and release immediately.</li></ol>
-  <p><b>Holding:</b> a colored strip lights up while held. Release when the timer's last seconds digit matches: <b>blue 4, white 1, yellow 5, red 1</b>. (Hold for at least a second first.)</p></div>`;
-  $('#bomb').innerHTML=h;updExpert();
-}
-function updExpert(){
-  const s=$('#strikes');if(s)s.innerHTML=strikesTxt();
-  const e=$('#estat');if(e)e.textContent=`Wires ${B.solved[0]?'✓':'·'}  Symbols ${B.solved[1]?'✓':'·'}  Button ${B.solved[2]?'✓':'·'}`;
-}
 
 /* ---------- custom game plugins ---------- */
 function registerGame(g){GAMES[g.id]=g;renderCustomMenu()}
@@ -462,7 +335,7 @@ function renderCustomMenu(){
 }
 function startCG(id,seed){
   if(CG&&CG.destroy)CG.destroy();
-  P=null;B=null;cur=null;lastCG=id;$('#end').hidden=true;$('#banner').hidden=true;
+  P=null;cur=null;lastCG=id;$('#end').hidden=true;$('#banner').hidden=true;
   const root=$('#groot');root.innerHTML='';show('s-game');
   CG=GAMES[id].start({isHost,me,names:{...names},seed,root,send:d=>send({t:'g',d}),end:(title,text)=>endCard(title,text),rng,shuffle:a=>{const r=rng(seed+7);a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a},toast});
 }
@@ -474,7 +347,7 @@ $('#btn-copy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText($
 try{$('#name').value=localStorage.getItem('duoname')||''}catch(e){}
 $('#name').onchange=()=>{try{localStorage.setItem('duoname',$('#name').value)}catch(e){}};
 const jp=new URLSearchParams(location.search).get('join');
-if(jp){$('#joincode').value=jp.toUpperCase();$('#btn-join').textContent='Join room '+jp.toUpperCase()}
+if(jp){$('#joincode').value=jp.toUpperCase();$('#btn-join').textContent='Join room '+jp.toUpperCase();$('#btn-create').hidden=true;$('#joinlabel').textContent='You were invited! Type your name above, then join.';$('#name').focus()}
 </script>
 <script src="games/battleship.js"></script>
 <script src="games/sequence.js"></script>
@@ -482,5 +355,7 @@ if(jp){$('#joincode').value=jp.toUpperCase();$('#btn-join').textContent='Join ro
 <script src="games/taboo.js"></script>
 <script src="games/cah.js"></script>
 <script src="games/allegiance.js"></script>
+<script src="games/spicy.js"></script>
+<script src="games/match.js"></script>
 </body>
 </html>
