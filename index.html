@@ -87,7 +87,10 @@ button:disabled{opacity:.4;cursor:default}
     <button class="gcard" data-game="party">Party Mode<small>5 rapid mini-games: Coin Grab, Reaction Duel, Tug of War. Most wins takes the crown.</small></button>
     <button class="gcard" data-game="bomb">Bomb Defusal<small>One of you sees the bomb, the other has the manual. Talk fast. You swap roles every round.</small></button>
   </div>
+  <div class="games" id="customgames" style="margin-top:12px"></div>
 </section>
+
+<section id="s-game" hidden><div id="groot"></div></section>
 
 <section id="s-party" hidden>
   <div id="hud"><span id="hud-r"></span><span id="hud-s"></span></div>
@@ -107,7 +110,8 @@ button:disabled{opacity:.4;cursor:default}
 const $=s=>document.querySelector(s);
 let peer,conn,isHost=false,me='host',names={host:'Player 1',guest:'Player 2'},rtt=0,code='',gotHello=false;
 const ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]};
-let P=null,B=null,cur=null,lastDef=null;
+let P=null,B=null,cur=null,lastDef=null,CG=null,lastCG=null;
+const GAMES={};
 
 function show(id){document.querySelectorAll('section').forEach(s=>s.hidden=s.id!==id)}
 function send(m){if(conn&&conn.open)conn.send(m)}
@@ -148,6 +152,8 @@ function onData(m){
     case 'rtt':rtt=m.v;break;
     case 'req':if(isHost)handleReq(m.game);break;
     case 'menu':toMenu();break;
+    case 'cg':startCG(m.id,m.seed);break;
+    case 'g':if(CG&&CG.onMsg)CG.onMsg(m.d);break;
     case 'party':partyStart(m.rounds);break;
     case 'mg':runMG(m.kind,m.i);break;
     case 'mgend':mgEnd(m);break;
@@ -159,7 +165,7 @@ function onData(m){
   }
 }
 function toMenu(){
-  cur=null;if(B&&B.iv)clearInterval(B.iv);B=null;
+  if(CG&&CG.destroy)CG.destroy();CG=null;cur=null;if(B&&B.iv)clearInterval(B.iv);B=null;
   $('#end').hidden=true;$('#banner').hidden=true;
   $('#menuwho').textContent=`${names.host} & ${names.guest}`;show('s-menu');
 }
@@ -171,7 +177,8 @@ function handleReq(g){
     const d=lastDef?other(lastDef):(Math.random()<.5?'host':'guest');
     const seed=Math.floor(Math.random()*2**31);send({t:'bomb',seed,defuser:d});startBomb(seed,d);
   }
-  else if(g==='again'){handleReq(P&&!B?'party':'bomb')}
+  else if(GAMES[g]){const seed=Math.floor(Math.random()*2**31);send({t:'cg',id:g,seed});startCG(g,seed)}
+  else if(g==='again'){handleReq(CG?lastCG:(P&&!B?'party':'bomb'))}
 }
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
@@ -202,7 +209,7 @@ addEventListener('pointermove',e=>{if(joy){joy.dx=e.clientX-joy.x;joy.dy=e.clien
 addEventListener('pointerup',()=>{joy=null});
 
 /* ---------- party mode ---------- */
-function partyStart(rounds){P={rounds,i:-1,score:{host:0,guest:0}};B=null;$('#end').hidden=true;show('s-party');hud();if(isHost)setTimeout(nextMG,300)}
+function partyStart(rounds){CG=null;P={rounds,i:-1,score:{host:0,guest:0}};B=null;$('#end').hidden=true;show('s-party');hud();if(isHost)setTimeout(nextMG,300)}
 function hud(){
   if(!P)return;
   $('#hud-r').textContent=`Round ${Math.max(1,P.i+1)}/${P.rounds.length}`;
@@ -377,7 +384,7 @@ const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 const rem=()=>Math.max(0,B.dur-(performance.now()-B.t0)/1000);
 
 function startBomb(seed,defuser){
-  P=null;cur=null;lastDef=defuser;$('#end').hidden=true;$('#banner').hidden=true;
+  P=null;CG=null;cur=null;lastDef=defuser;$('#end').hidden=true;$('#banner').hidden=true;
   B={bomb:gen(seed),role:defuser===me?'defuser':'expert',t0:performance.now(),dur:240,strikes:0,solved:[false,false,false],over:false,cut:[],prog:0};
   B.wsol=wireSol(B.bomb.wires,B.bomb.odd);
   show('s-bomb');
@@ -448,6 +455,18 @@ function updExpert(){
   const e=$('#estat');if(e)e.textContent=`Wires ${B.solved[0]?'✓':'·'}  Symbols ${B.solved[1]?'✓':'·'}  Button ${B.solved[2]?'✓':'·'}`;
 }
 
+/* ---------- custom game plugins ---------- */
+function registerGame(g){GAMES[g.id]=g;renderCustomMenu()}
+function renderCustomMenu(){
+  $('#customgames').innerHTML=Object.values(GAMES).map(g=>`<button class="gcard" data-game="${g.id}">${g.icon||''} ${g.name}<small>${g.blurb}</small></button>`).join('');
+}
+function startCG(id,seed){
+  if(CG&&CG.destroy)CG.destroy();
+  P=null;B=null;cur=null;lastCG=id;$('#end').hidden=true;$('#banner').hidden=true;
+  const root=$('#groot');root.innerHTML='';show('s-game');
+  CG=GAMES[id].start({isHost,me,names:{...names},seed,root,send:d=>send({t:'g',d}),end:(title,text)=>endCard(title,text),rng,shuffle:a=>{const r=rng(seed+7);a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a},toast});
+}
+
 /* ---------- boot ---------- */
 $('#btn-create').onclick=createRoom;
 $('#btn-join').onclick=()=>joinRoom($('#joincode').value);
@@ -457,5 +476,11 @@ $('#name').onchange=()=>{try{localStorage.setItem('duoname',$('#name').value)}ca
 const jp=new URLSearchParams(location.search).get('join');
 if(jp){$('#joincode').value=jp.toUpperCase();$('#btn-join').textContent='Join room '+jp.toUpperCase()}
 </script>
+<script src="games/battleship.js"></script>
+<script src="games/sequence.js"></script>
+<script src="games/monopolydeal.js"></script>
+<script src="games/taboo.js"></script>
+<script src="games/cah.js"></script>
+<script src="games/allegiance.js"></script>
 </body>
 </html>
