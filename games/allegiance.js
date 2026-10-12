@@ -108,7 +108,7 @@
         r: 1, speaker: 'host', phase: 'draw',
         en: { C: 0, A: 0 }, total: 0, chaos: 0,
         deck: ctx.shuffle(base), dp: 0, disc: [], reshuf: 0,
-        draw: [], passed: [], claim: null, power: null, purge: false,
+        draw: [], passed: [], ready: { host: false, guest: false }, claim: null, power: null, purge: false,
         over: false, final: null, log: [], dead: false, ended: false
       };
       var notes = []; /* private to me */
@@ -138,6 +138,10 @@
         ui.claimText = '';
       }
       function endRound() {
+        S.phase = 'between';
+        S.ready = { host: false, guest: false };
+      }
+      function nextRound() {
         if (!S.purge) S.speaker = otherOf(S.speaker);
         S.purge = false;
         S.r++;
@@ -220,6 +224,11 @@
             if (POWERS[S.total]) { S.power = POWERS[S.total]; S.phase = 'power'; }
             else endRound();
             return true;
+          case 'ready':
+            if (S.phase !== 'between' || S.ready[from]) return false;
+            S.ready[from] = true;
+            if (S.ready.host && S.ready.guest) nextRound();
+            return true;
           case 'power':
             if (from !== spk || S.phase !== 'power' || m.p !== S.power) return false;
             if (S.power === 'inv') {
@@ -294,6 +303,8 @@
           h += spk ? 'Waiting for ' + esc(nm(OP)) + ' to enact or veto...' : 'Enactor: choose a policy to enact';
         } else if (S.phase === 'veto') {
           h += spk ? 'Enactor called a Veto: you must accept' : 'Veto called. Waiting for ' + esc(nm(S.speaker)) + ' to accept...';
+        } else if (S.phase === 'between') {
+          h += S.ready[ME] ? 'Waiting for ' + esc(nm(OP)) + '...' : 'Round resolved';
         } else if (S.phase === 'power') {
           var pn = { inv: 'Investigate', peek: 'Peek', purge: 'Purge' }[S.power];
           h += spk ? 'Speaker: use your power, ' + pn : esc(nm(S.speaker)) + ' is using ' + pn + '...';
@@ -325,6 +336,9 @@
         } else if (S.phase === 'power' && spk) {
           var lab = { inv: 'Investigate ' + esc(nm(OP)) + '\'s allegiance', peek: 'Peek at the top 3 policies', purge: 'Purge: ' + esc(nm(OP)) + ' skips being Speaker next round' }[S.power];
           h += '<button class="big alt pw-' + S.power + '" data-a="power">' + lab + '</button>';
+        } else if (S.phase === 'between') {
+          h += claimBubble();
+          if (!S.ready[ME]) h += '<button class="big" data-a="ready">Continue</button>';
         } else {
           h += claimBubble();
         }
@@ -377,6 +391,7 @@
         } else if (a === 'enact') { local({ k: 'enact', i: i }); }
         else if (a === 'veto') { local({ k: 'veto' }); }
         else if (a === 'vetoAccept') { local({ k: 'vetoAccept' }); }
+        else if (a === 'ready') { local({ k: 'ready' }); }
         else if (a === 'power') { local({ k: 'power', p: S.power }); }
       }
       function onInput(e) {
@@ -401,6 +416,7 @@
         }
         if (S.phase === 'veto' && spk) return local({ k: 'vetoAccept' });
         if (S.phase === 'power' && spk) return local({ k: 'power', p: S.power });
+        if (S.phase === 'between' && !S.ready[ME]) return local({ k: 'ready' });
         return false;
       }
 
