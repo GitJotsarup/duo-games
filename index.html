@@ -102,7 +102,7 @@ button:disabled{opacity:.4;cursor:default}
 <div class="overlay" id="lock"><div class="box"><div class="logo">🔒</div><h2>Duo Games</h2><p class="sub">Enter the password to continue</p>
   <input id="pw" type="password" placeholder="Password" autocomplete="off">
   <button class="big pink" id="btn-unlock">Unlock</button><p class="tip" id="pwerr"></p></div></div>
-<div class="overlay" id="banner" hidden><div class="box"><p class="tip" id="b-small"></p><h2 id="b-title"></h2><p id="b-text"></p></div></div>
+<div class="overlay" id="banner" hidden><div class="box"><p class="tip" id="b-small"></p><h2 id="b-title"></h2><p id="b-text"></p><button class="big pink" id="b-next" hidden>Next round</button></div></div>
 <div class="overlay" id="end" hidden><div class="box"><h2 id="e-title"></h2><p id="e-text"></p>
   <button class="big pink" data-req="again">Play again</button>
   <button class="big ghost" data-req="menu">Back to menu</button></div></div>
@@ -120,6 +120,7 @@ const hash53=(str,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=
 let unlocked=false;
 function tryUnlock(v){if(hash53(v)===PWH){unlocked=true;try{localStorage.setItem('duo_ok',PWH)}catch(e){}$('#lock').hidden=true;return true}return false}
 
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function show(id){document.querySelectorAll('section').forEach(s=>s.hidden=s.id!==id)}
 function send(m){if(conn&&conn.open)conn.send(m)}
 function toast(t,ms=2500){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),ms)}
@@ -167,6 +168,7 @@ function onData(m){
     case 'party':partyStart(m.rounds);break;
     case 'mg':runMG(m.kind,m.i);break;
     case 'mgend':mgEnd(m);break;
+    case 'pready':partyReady(other(me));break;
     case 'pfinal':pFinal(m.score);break;
     default:if(cur&&cur.msg)cur.msg(m);
   }
@@ -187,7 +189,7 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 
 /* ---------- shared UI bits ---------- */
 function banner(small,title,text,ms){
-  $('#b-small').textContent=small||'';$('#b-title').textContent=title;$('#b-text').textContent=text||'';$('#banner').hidden=false;
+  $('#b-small').textContent=small||'';$('#b-title').textContent=title;$('#b-text').textContent=text||'';$('#banner').hidden=false;$('#b-next').hidden=true;
   if(ms)setTimeout(()=>{$('#banner').hidden=true},ms);
 }
 function endCard(title,text){$('#banner').hidden=true;$('#e-title').textContent=title;$('#e-text').textContent=text;$('#end').hidden=false}
@@ -233,13 +235,19 @@ function endMG(winner,info){
   if(!cur||cur.done)return;cur.done=true;cur.run=false;
   if(winner!=='tie')P.score[winner]++;
   const m={t:'mgend',winner,score:P.score,info:info||''};send(m);mgEnd(m);
-  setTimeout(nextMG,3600);
 }
 function mgEnd(m){
   P.score=m.score;if(cur){cur.run=false;cur.done=true}hud();
   const t=m.winner==='tie'?"It's a tie!":m.winner===me?'You win this round! 🎉':`${names[m.winner]} wins this round`;
-  banner('',t,m.info,3300);
+  banner('',t,m.info);
+  P.ready={host:false,guest:false};
+  const nb=$('#b-next');nb.hidden=false;nb.disabled=false;nb.textContent=P.i+1>=P.rounds.length?'See results':'Next round';
 }
+function partyReady(who){
+  if(!P||!P.ready)return;P.ready[who]=true;
+  if(isHost&&P.ready.host&&P.ready.guest){P.ready=null;$('#banner').hidden=true;nextMG()}
+}
+$('#b-next').onclick=()=>{if(!P||!P.ready||P.ready[me])return;const nb=$('#b-next');nb.disabled=true;nb.textContent='Waiting for '+names[other(me)]+'...';send({t:'pready'});partyReady(me)};
 function pFinal(s){
   cur=null;const w=s.host>s.guest?'host':s.guest>s.host?'guest':'tie';
   endCard(w==='tie'?'Draw! 🤝':w===me?'You win the night! 👑':`${names[w]} wins the night! 👑`,`${names.host} ${s.host} - ${s.guest} ${names.guest}`);

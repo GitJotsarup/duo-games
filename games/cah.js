@@ -883,6 +883,8 @@
       /* --- countdown --- */
       function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
       function startTimer() {
+        /* no auto-advance: both players must press Next round */
+        if (true) return;
         if (!hasDom) return;
         stopTimer();
         cd = COUNTDOWN;
@@ -963,7 +965,7 @@
           }
           if (S.phase === 'reveal') {
             h += '<div class="acts"><button data-a="next"' + (S.ready[me] ? ' disabled' : '') + '>' + (S.ready[me] ? 'Waiting for ' + nm(partner) + '&hellip;' : (S.over ? 'Finish' : 'Next round')) + '</button>' +
-              '<span class="tip">' + (S.ready[me] ? '' : 'auto in ' + cd + 's') + '</span></div>';
+              '<span class="tip">' + (S.ready[me] ? '' : 'waiting for both players to press Next') + '</span></div>';
           }
         }
         if (!S.swapped[me] && !S.over && S.phase !== 'over') {
