@@ -11,7 +11,8 @@ var CATS=[
  {id:'role',name:'Roleplay',icon:'🎭'},
  {id:'play',name:'Playful Games',icon:'🎲'},
  {id:'place',name:'Places & Settings',icon:'🏨'},
- {id:'far',name:'Long-distance & Texting',icon:'📱'}
+ {id:'far',name:'Long-distance & Texting',icon:'📱'},
+ {id:'pos',name:'Positions',icon:'🛏️'}
 ];
 var LV=['','Flirty','Spicy','Wild'],LVI=['','💋','🔥','😈'];
 var RAW={
@@ -185,11 +186,280 @@ far:{
 "I'd love to try a video call where we both do whatever we're comfortable with."]}
 };
 
-/* flat, stably ordered list: id = index. Never reorder RAW without bumping the ordering on both clients (same file = same order). */
+/* more ideas: aftercare & cuddles, foreplay, toys, games & challenges, mornings/showers/quickies,
+   long-distance, dirty-talk lines and light kinks (always agreed in advance, with a safeword). Appended per level. */
+var MORE={
+sweet:{
+1:["I'd love a long cuddle with our legs tangled after a long day.",
+"Try a morning in bed with coffee, kisses and no alarms.",
+"I'd love to brush {p}'s hair slowly while we talk.",
+"Try a foot rub on the couch while we catch up.",
+"I'd love to fall asleep spooning {p}.",
+"Try a lazy kiss in the doorway before one of us leaves.",
+"I'd love to read to each other in bed by lamplight.",
+"Try a warm bath where we just hold each other.",
+"I'd love a slow forehead-to-forehead moment with our eyes closed.",
+"Try kissing {p}'s hands and wrists, one finger at a time.",
+"I'd love to hug {p} from behind while they're cooking."],
+2:["I'd love to be kissed awake and pulled back under the covers.",
+"Try an extra-long foreplay session with a strict no-rushing rule.",
+"I'd love a massage with warm oil that ends wherever we like.",
+"Try a sensual shower where we take turns soaping each other.",
+"I'd love to kiss slowly all the way down {p}'s spine.",
+"Try lingering kisses on the inner thighs before anything else.",
+"I'd love to feel {p}'s breath on my neck while we cuddle.",
+"Try a quiet, slow morning session before getting up.",
+"I'd love to undress each other by candlelight with music on.",
+"Try a long aftercare cuddle with water, snacks and soft talk.",
+"I'd love a sensual dance that slowly loses the clothes."],
+3:["I'd love a slow morning quickie before the alarm goes off.",
+"Try an all-evening tease with oil and kisses, and no finish until we both say so.",
+"I'd love to be pleasured slowly with lips and hands until I melt.",
+"Try a shower quickie against the cool tiles.",
+"I'd love to take turns being completely pampered and pleasured, twenty minutes each.",
+"Try slow oral foreplay with no time limit at all.",
+"I'd love a full aftercare ritual after a wild night: bath, cuddles, whispered praise.",
+"Try a massage-oil night that covers absolutely every inch.",
+"I'd love to stay joined and still for a while, just feeling each other.",
+"Try a slow, intimate night with a vibrator added for extra pleasure.",
+"I'd love to be held tightly and told how good I was afterwards."]},
+talk:{
+1:["I'd love to hear {p} tell me what they daydream about.",
+"Try telling {p} one thing I'd love to do with them this weekend.",
+"I'd love to whisper 'I want you' when {p} least expects it.",
+"Try a compliment battle: whoever runs out first owes a kiss.",
+"I'd love to hear what {p} finds sexiest about my voice.",
+"Try saying 'come here' in a way that leaves no doubt.",
+"I'd love to tell {p} which outfit of theirs drives me crazy.",
+"Try describing our best kiss ever to each other.",
+"I'd love to share my favourite swoon-worthy memory of {p}.",
+"Try a slow, flirty phone call where we only say nice things.",
+"I'd love to hear {p} tell me I look good, out of nowhere."],
+2:["I'd love to whisper 'I can't stop thinking about tonight' at dinner.",
+"Try describing exactly where I want to be kissed next.",
+"I'd love to hear {p} say 'don't stop' and mean it.",
+"Try telling {p} what I was imagining the last time I zoned out.",
+"I'd love to talk through a fantasy while we cuddle in bed.",
+"Try a rule where we have to say out loud what feels good.",
+"I'd love to hear {p} tell me what they want, in their best low voice.",
+"Try reading a list of 'things I want to do to you' aloud.",
+"I'd love to whisper teasing promises all evening at a party.",
+"Try describing how {p} looked the last time they really turned me on.",
+"I'd love to hear {p} admit their most secret turn-on."],
+3:["I'd love to hear {p} tell me exactly how good I feel, in explicit words.",
+"Try giving {p} instructions in a firm voice, with a safeword agreed.",
+"I'd love to be called something naughty that we've agreed on beforehand.",
+"Try narrating a filthy fantasy while we touch.",
+"I'd love to hear {p} describe what they're going to do to me, then do it.",
+"Try praise talk: telling each other how good we are, in detail.",
+"I'd love to say exactly what I want without blushing.",
+"Try a 'yes, please' game where the only allowed answers are enthusiastic ones.",
+"I'd love to hear {p} count me down to the finish.",
+"Try describing our wildest night together while it happens again.",
+"I'd love to whisper my filthiest fantasy right before we start."]},
+role:{
+1:["I'd love to play waiter and diner at a candlelit dinner at home.",
+"Try a secret-agent date where we pass coded flirty notes.",
+"I'd love to pretend we're on our honeymoon for a night.",
+"Try playing tourists who meet at a café and fall for each other.",
+"I'd love to dress up in matching costumes for a cheeky night in.",
+"Try a pirate-steals-a-heart game, all flirting and no plot needed.",
+"I'd love to play a shy bookworm being charmed by {p}.",
+"Try a meet-cute do-over where we pretend it's our first meeting.",
+"I'd love a masquerade night at home with masks and slow dancing.",
+"Try role-playing a celebrity interview that gets flirty.",
+"I'd love to play a lifeguard who rescues {p}, very dramatically."],
+2:["I'd love a costume night with outfits we choose for each other.",
+"Try a photographer-and-model scenario with lots of posing.",
+"I'd love a doctor's check-up roleplay between two consenting adults.",
+"Try a police-officer-and-suspect game with fluffy handcuffs and a safeword.",
+"I'd love a pool-cleaner or housekeeper scenario with a cheeky twist.",
+"Try a dance-teacher-and-student scenario that gets very hands-on.",
+"I'd love to play a royal and their devoted servant for an evening.",
+"Try a strangers-on-a-blind-date scenario that ends at home.",
+"I'd love a late-night intruder fantasy that's all flirting, fully scripted and agreed beforehand.",
+"Try a cowboy or cowgirl night with hats and plenty of swagger.",
+"I'd love to play a seductive spy interrogating {p} with kisses."],
+3:["I'd love to try a dominant/submissive scene with agreed limits and a safeword.",
+"Try light spanking as part of a roleplay we both agreed on.",
+"I'd love to wear a costume {p} chose and stay in character all night.",
+"Try a 'yes, sir / yes, ma'am' scene with clear check-ins.",
+"I'd love a master-and-servant fantasy with every rule agreed in advance.",
+"Try a scene where one partner is restrained with soft cuffs and fully pampered.",
+"I'd love to be ordered around in bed, with a safeword I can use anytime.",
+"Try a strip-tease audition where the 'judge' gives explicit feedback.",
+"I'd love a pleasure-servant roleplay where my only job is pleasing {p}.",
+"Try a scene where the roles switch on a code word.",
+"I'd love a fully explicit fantasy with costumes, props and a script we wrote together."]},
+play:{
+1:["I'd love to play twenty questions where every answer earns a kiss.",
+"Try a kissing challenge: who can kiss the longest without laughing.",
+"I'd love a pillow fight that turns into a make-out.",
+"Try a game of never-have-I-ever with only cheeky questions.",
+"I'd love a game of hide and seek with a kiss for the finder.",
+"Try a slow-dance challenge where each song we get a little closer.",
+"I'd love to play spin the bottle, just the two of us.",
+"Try a compliment jar that we pick from every night.",
+"I'd love a cheeky would-you-rather session in bed.",
+"Try massage roulette: spin to choose which body part gets attention.",
+"I'd love to draw a new dare card every night for a week."],
+2:["I'd love to try massage oil and a set of warm massage stones.",
+"Try a vibrator during foreplay, controlled by {p}.",
+"I'd love a game of Simon Says with steamy commands.",
+"Try a dare jar filled only with spicy dares.",
+"I'd love a card game where every lost round removes a layer.",
+"Try a 'don't make a sound' challenge while the other one teases.",
+"I'd love to be blindfolded and guess what flavour {p} is kissing me with.",
+"Try a timed make-out with a hands-behind-your-back rule.",
+"I'd love a sexy coupon book we can redeem whenever we like.",
+"Try a remote-controlled toy on a date night at home.",
+"I'd love a game where we rate each other's moves out loud."],
+3:["I'd love to try a couples' vibrator together.",
+"Try soft restraints and a feather for a slow teasing session.",
+"I'd love to try a toy {p} chooses for me, with a stop word on hand.",
+"Try an orgasm-control game with clear rules and lots of check-ins.",
+"I'd love to try light spanking to see if we like it.",
+"Try a 'first to finish loses' challenge.",
+"I'd love a toy-shopping trip together, then trying out the haul.",
+"Try a quiz where every wrong answer earns a gentle swat, by agreement.",
+"I'd love to tease {p} with a wand toy while they try to stay still.",
+"Try a blindfold, a vibrator and agreed signals for 'more' and 'stop'.",
+"I'd love a night of taking turns with every toy we own."]},
+place:{
+1:["I'd love a sunset kiss on a balcony.",
+"Try a blanket fort in the living room with fairy lights.",
+"I'd love a cosy cabin weekend with a fireplace.",
+"Try kissing in a photo booth.",
+"I'd love a rooftop date with wine and a view.",
+"Try a slow dance in the garden at night.",
+"I'd love to cuddle in a hammock together.",
+"Try a dinner date at home with a dress code.",
+"I'd love a lazy Sunday morning in bed with pastries.",
+"Try a candlelit bath with rose petals.",
+"I'd love a stolen kiss in a quiet corner at a party."],
+2:["I'd love to fool around on the couch with the lights off.",
+"Try a cabin weekend spent mostly in front of the fire.",
+"I'd love a steamy session on a balcony that is completely private.",
+"Try the bathtub, with bubbles and no rush.",
+"I'd love to make out in a private hot tub.",
+"Try the dining table after dessert.",
+"I'd love a quickie before we head out to a party.",
+"Try the stairs, carefully and laughing.",
+"I'd love a tent under the stars, somewhere secluded and private.",
+"Try a staycation in a themed hotel room.",
+"I'd love a morning quickie before work, short and sweet."],
+3:["I'd love to try the desk or work table at home.",
+"Try a full-length mirror and the lights on bright.",
+"I'd love a shower session with a detachable showerhead.",
+"Try sitting on the washing machine on its spin cycle.",
+"I'd love a weekend in a cabin with a private hot tub and no clothes.",
+"Try a sneaky quickie in a locked bathroom at our own house party.",
+"I'd love a poolside session at a completely private holiday villa.",
+"Try a beach-house getaway where we christen every room.",
+"I'd love an armchair session with {p} on my lap.",
+"Try the hallway, against the wall, the second we get home.",
+"I'd love a candlelit floor session on a pile of cushions and blankets."]},
+far:{
+1:["I'd love a goodnight voice note every night we're apart.",
+"Try a long-distance date where we watch the same sunset on a call.",
+"I'd love a care package with something that smells like {p}.",
+"Try writing each other old-fashioned love letters.",
+"I'd love a surprise flirty text in the middle of a boring meeting.",
+"Try playing an online game together, with flirty stakes.",
+"I'd love to fall asleep on a call together.",
+"Try a countdown calendar to our next visit.",
+"I'd love a playlist swap with notes about each song.",
+"Try sending a photo of something that reminded me of {p}.",
+"I'd love a 'what are you wearing?' text, just for fun."],
+2:["I'd love a late-night text conversation that gets steamier as it goes.",
+"Try a voice note describing the last time we were together.",
+"I'd love a steamy text right before I fall asleep.",
+"Try a sexting game where each message has to be bolder than the last.",
+"I'd love to hear {p}'s voice whispering on the phone in the dark.",
+"Try a long-distance date with matching outfits and flirty talk only.",
+"I'd love a teasing email with the subject line 'Read this alone'.",
+"Try sending a list of things I'll do on our next visit.",
+"I'd love a voice note of {p} reading a steamy passage from a book.",
+"Try a flirty texting rule: one compliment every hour, all day.",
+"I'd love an outfit-reveal call where we each choose what to show, or nothing at all."],
+3:["I'd love to try an app-controlled toy that {p} controls from afar.",
+"Try an explicit voice note for me to listen to in private.",
+"I'd love a mutual-pleasure call where we talk each other through it.",
+"Try an erotic story written just for me and sent at midnight.",
+"I'd love to send {p} explicit instructions to follow before our call.",
+"Try a sexting session about exactly what happens on our next visit.",
+"I'd love to hear {p} finish over the phone.",
+"Try a long-distance tease: messages all day, a call at night.",
+"I'd love to record a steamy audio of what I'd whisper in {p}'s ear.",
+"Try writing our next-visit fantasy together in a shared document.",
+"I'd love a call where we each describe our fantasy in detail, no camera needed."]}
+};
+
+/* Positions: 'Name|one-line, non-graphic setup|tags'. Text only. */
+RAW.pos={
+1:["Missionary|Face to face, one partner on top; close, simple and easy to kiss.|intimate,eye-contact",
+"Spooning|Both on your sides, one behind the other; cosy, slow and relaxed.|lazy-day,intimate",
+"Cowgirl / Cowboy|One partner on top, sitting upright and setting the pace.|eye-contact",
+"Lotus|Face to face and seated, legs wrapped around each other; slow and intimate.|intimate,eye-contact",
+"Face-to-Face Side-Lying|Lying on your sides facing each other; gentle, unhurried and close.|lazy-day,eye-contact,intimate",
+"Coital Alignment|Missionary with the top partner shifted higher, grinding rather than thrusting; a slow, close rhythm.|intimate,eye-contact",
+"Lap Dance|One partner seated on a chair, the other on their lap facing them; close and flirty.|eye-contact,intimate",
+"Pillow-Propped Missionary|Missionary with a pillow under the hips for a better angle; comfy and easy.|intimate,lazy-day",
+"Cuddle Cowgirl|On top but leaning forward chest to chest; lots of kissing and slow grinding.|intimate,eye-contact",
+"Edge-of-Bed Straddle|One partner sits on the edge of the bed, the other straddles them; easy and close.|eye-contact",
+"The Hug|Standing face to face, holding each other close; tender and slow, best near a wall.|intimate",
+"Morning Glory|Spooning slowly, half-awake under the covers.|lazy-day,intimate",
+"Tummy-to-Tummy Recline|One partner reclines on pillows, the other lies on top facing them; lazy and warm.|lazy-day,eye-contact",
+"Side Scissors|Lying on your sides with legs interlaced; slow, relaxed and grindy.|lazy-day",
+"Sofa Snuggle|One partner reclines on the sofa, the other nestles between their legs facing them.|intimate,lazy-day",
+"Rocking Horse|One partner sits cross-legged, the other on their lap; rock together slowly.|intimate,eye-contact"],
+2:["Doggy Style|One partner on hands and knees, the other kneeling behind; a classic with plenty of rhythm.|athletic",
+"Reverse Cowgirl / Cowboy|On top but facing away; a great view and lots of control for the top.|",
+"Butterfly|One partner lies at the edge of the bed with hips on a pillow, the other stands; an easy, deep angle.|eye-contact",
+"Legs on Shoulders|Missionary with the bottom partner's legs resting on the other's shoulders; deep and intense.|eye-contact,athletic",
+"Standing From Behind|Both standing, one behind the other, leaning on a counter; quick and steamy.|athletic",
+"Kneeling at the Edge|The bottom partner lies at the edge of the bed, the other kneels on the floor; good angle, easy pace.|eye-contact",
+"Lazy Doggy|Doggy style but lying flat on the stomach; relaxed and very close.|lazy-day",
+"The Pretzel|Side-lying with one partner kneeling and legs intertwined; a great angle with eye contact.|eye-contact",
+"Chairman|One partner seated, the other on their lap facing away; hands free to roam.|",
+"Shower Stand|Standing in the shower, one partner braced against the wall, the other behind.|athletic",
+"Kneeling Embrace|Both kneeling face to face, bodies pressed together; slow and passionate.|intimate,eye-contact",
+"Countertop|One partner sits on the kitchen counter, the other stands between their legs.|eye-contact",
+"Spork|Spooning, but the front partner rolls partly onto their back; deeper than a regular spoon.|lazy-day",
+"Bridge Lift|The bottom partner lifts their hips into a bridge while the other kneels between; playful and a bit athletic.|athletic,eye-contact",
+"Spin Cycle|One partner sits on a running washing machine, the other stands in front; the vibration is the point.|",
+"69|Head to toe, pleasuring each other with your mouths at the same time; a playful favourite.|intimate"],
+3:["Standing Carry|One partner lifts and holds the other, legs wrapped around; intense and very athletic.|athletic,eye-contact",
+"Wheelbarrow|One partner holds the other's legs while they balance on their hands; playful and athletic.|athletic",
+"Against the Wall|Standing face to face, one pressed gently to the wall; urgent and passionate.|athletic,eye-contact",
+"Deep Fold|The bottom partner on their back with knees drawn toward the chest; deep and intense.|eye-contact",
+"Over the Table|One partner bends over a sturdy table while the other stands behind.|athletic",
+"Stair Climb|On the stairs, one partner kneels a few steps up, the other behind; mind the carpet.|athletic",
+"Face-Sitting|One partner kneels over the other's face for oral, holding the headboard and setting the pace.|",
+"Full Bridge|One partner arches into a full bridge while the other kneels; for the flexible only.|athletic",
+"Blindfolded Cowgirl|On top, while the bottom partner wears a blindfold and can only feel.|intimate",
+"Tied-Wrist Missionary|Missionary with the bottom partner's wrists loosely tied above their head, by agreement.|eye-contact,intimate",
+"Standing 69|One partner holds the other upside down for mutual oral; very athletic, try it beside a bed.|athletic",
+"Spread Eagle|The bottom partner lies with arms and legs spread, maybe in soft restraints, while the other takes their time.|",
+"Mirror Doggy|Doggy style in front of a mirror, so you can watch each other's faces.|eye-contact",
+"Vibrating Spoon|Spooning with a vibrator held in front; slow with an extra buzz.|lazy-day,intimate",
+"Kneeling From Behind|Both kneeling upright, one behind the other, the back partner's hands roaming freely.|intimate",
+"The Squat|The top partner squats instead of kneeling and sets a bouncy pace; for strong thighs.|athletic",
+"Hanging Edge|The bottom partner lies with head and shoulders off the edge of the bed; a heady rush, keep it short.|"]
+};
+
+/* flat, stably ordered list: id = index. Same file = same order on both clients. */
 var ALL=[];
 (function(){
   CATS.forEach(function(c){
-    for(var l=1;l<=3;l++)RAW[c.id][l].forEach(function(t){ALL.push({id:ALL.length,cat:c.id,lvl:l,text:t})});
+    for(var l=1;l<=3;l++){
+      var list=RAW[c.id][l].concat(MORE[c.id]?MORE[c.id][l]:[]);
+      list.forEach(function(t){
+        var o={id:ALL.length,cat:c.id,lvl:l,text:t};
+        if(c.id==='pos'){var p=t.split('|');o.text=p[0];o.desc=p[1]||'';o.tags=(p[2]||'').split(',').filter(Boolean)}
+        ALL.push(o);
+      });
+    }
   });
 })();
 var CATIDS=CATS.map(function(c){return c.id});
@@ -231,7 +501,7 @@ function validAns(s,n){return typeof s==='string'&&s.length===n&&/^[ymn]*$/.test
 function fillText(t,name){return String(t).replace(/\{p\}/g,name||'your partner')}
 
 /* ---------- styles ---------- */
-var CSS=".dm{--a:#c04dff;--a2:#ff4fa3;--glow:rgba(192,77,255,.32);--ink2:#f1dcff;max-width:720px;margin:0 auto;padding:6px 0 34px;font-family:inherit}\n.dm *{box-sizing:border-box}\n.dm button{font:inherit;font-weight:700;border:0;border-radius:14px;cursor:pointer;transition:transform .12s,filter .12s,box-shadow .15s}\n.dm button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.1)}\n.dm button:active:not(:disabled){transform:scale(.97)}\n.dm button:disabled{opacity:.35;cursor:default}\n.dm-title{font-weight:800;font-size:1.55rem;letter-spacing:.02em;text-align:center;background:linear-gradient(90deg,#ff4fa3,#c04dff,#8f6bff);-webkit-background-clip:text;background-clip:text;color:transparent;margin:2px 0 10px;filter:drop-shadow(0 4px 14px rgba(192,77,255,.45))}\n.dm-box{position:relative;background:linear-gradient(150deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:24px;padding:22px;margin:12px 0;box-shadow:var(--shadow),0 0 50px rgba(192,77,255,.12);animation:dmpop .3s}\n.dm-box h2{margin:.1em 0;font-size:1.5rem}\n.dm-sub{color:var(--dim);font-size:.95rem;margin:6px 0 10px;line-height:1.45}\n.dm h3{margin:18px 0 8px;color:var(--ink2);font-size:.82rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}\n.dm-chips{display:flex;flex-wrap:wrap;gap:10px}\n.dm-chip{padding:10px 18px;border-radius:999px;border:1.5px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);font-weight:700;font-size:.95rem;margin:0;width:auto;box-shadow:none}\n.dm-chip.on{background:linear-gradient(135deg,var(--a),var(--a2));color:#fff;border-color:transparent;box-shadow:0 6px 20px var(--glow)}\nspan.dm-chip{display:inline-block}\n.dm-n{min-width:92px;padding:16px 18px;border-radius:18px;font-size:1.05rem;text-align:center}\n.dm-big{display:block;width:100%;background:linear-gradient(135deg,var(--a2),var(--a));color:#fff;margin:18px 0 0;padding:16px;font-size:1.12rem;box-shadow:0 10px 28px var(--glow)}\n.dm-prog{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.9rem;font-weight:700;color:var(--dim)}\n.dm-prog span{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:999px;padding:5px 14px}\n.dm-bar{position:relative;height:12px;background:rgba(255,255,255,.08);border-radius:999px;margin:10px 0 18px;overflow:visible}\n.dm-bar>i{position:relative;display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--a2),var(--a));transition:width .3s;box-shadow:0 0 14px var(--glow)}\n.dm-bar>i::after{content:\"\\2764\\FE0F\";position:absolute;right:-9px;top:-7px;font-size:1.05rem;animation:dmbeat 1s infinite}\n.dm-card{position:relative;text-align:center;min-height:250px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:30px 24px;margin:6px 14px 22px;border:2px solid transparent;border-radius:28px;background:linear-gradient(150deg,var(--card2),var(--card)) padding-box,linear-gradient(135deg,var(--a2),var(--a),var(--guest)) border-box;box-shadow:0 18px 44px rgba(0,0,0,.45),0 0 44px var(--glow),0 14px 0 -6px var(--card2),0 28px 0 -12px var(--card);animation:dmcard .35s cubic-bezier(.2,.9,.3,1.2)}\n.dm-tag{font-size:.78rem;font-weight:800;letter-spacing:.1em;color:#fff;background:linear-gradient(135deg,var(--a),var(--a2));border-radius:999px;padding:5px 14px}\n.dm-text{font-size:1.6rem;line-height:1.38;font-weight:700;color:#fff;word-break:break-word;text-shadow:0 2px 18px rgba(192,77,255,.4)}\n.dm-ans{display:flex;justify-content:center;gap:22px;margin-top:4px}\n.dm-ans button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:96px;height:96px;border-radius:50%;padding:0;margin:0;font-size:.95rem;font-weight:800;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.4)}\n.dm-ans button::before{font-size:1.9rem;line-height:1}\n.dm-yes{background:linear-gradient(135deg,#34d399,#16a34a)}.dm-yes::before{content:\"\\2705\"}.dm-yes:hover:not(:disabled){box-shadow:0 0 34px rgba(74,222,128,.7)}\n.dm-maybe{background:linear-gradient(135deg,#ffd166,#f59e0b);color:#3a2400!important}.dm-maybe::before{content:\"\\1F914\"}.dm-maybe:hover:not(:disabled){box-shadow:0 0 34px rgba(255,209,102,.7)}\n.dm-no{background:linear-gradient(135deg,#ff6b7a,#be1e3c)}.dm-no::before{content:\"\\274C\"}.dm-no:hover:not(:disabled){box-shadow:0 0 34px rgba(255,90,106,.7)}\n.dm-sec{display:flex;gap:10px;justify-content:center;margin-top:20px}\n.dm-sec button{margin:0;background:rgba(255,255,255,.07);color:var(--ink);border:1px solid var(--line);font-size:.9rem;padding:9px 16px;box-shadow:none}\n.dm-keys{color:var(--dim);font-size:.8rem;text-align:center;margin-top:12px;opacity:.85}\n.dm-empty{text-align:center;color:var(--ink2);padding:34px 14px;font-size:1.1rem}\n.dm-empty>div:first-child::before{content:\"\\1F496\";display:block;font-size:3.4rem;margin-bottom:8px;animation:dmbeat 1.1s infinite}\n.dm-hero{text-align:center;position:relative;overflow:hidden;padding:10px 0 6px}\n.dm-hero h2{font-size:2.2rem;background:linear-gradient(90deg,#ff4fa3,var(--gold),var(--a));-webkit-background-clip:text;background-clip:text;color:transparent}\n.dm-hearts{position:absolute;inset:0;pointer-events:none;overflow:hidden}\n.dm-hearts i{position:absolute;bottom:-20px;font-style:normal;font-size:1.3rem;opacity:0;animation:dmfloat 4.5s infinite}\n.dm-grp{margin-top:22px}\n.dm-grp>h2{font-size:1.25rem;margin:0 0 10px;color:#fff}\n.dm-item{background:linear-gradient(150deg,rgba(192,77,255,.14),rgba(255,209,102,.07));border:1px solid rgba(255,209,102,.28);border-radius:18px;padding:16px;margin:12px 0}\n.dm-item.hot{background:linear-gradient(150deg,rgba(255,79,163,.28),rgba(192,77,255,.2));border-color:var(--a2);box-shadow:0 0 26px rgba(255,79,163,.3)}\n.dm-meta{color:var(--dim);font-size:.78rem;font-weight:700;margin-bottom:6px}\n.dm-it{font-size:1.12rem;font-weight:700;color:#fff;word-break:break-word}\n.dm-form{display:flex;gap:8px;margin-top:12px;background:rgba(8,8,24,.55);border:1px solid var(--line);border-radius:999px;padding:4px}\n.dm-form input{flex:1;margin:0;border:0;background:transparent;box-shadow:none;padding:9px 14px;border-radius:999px;color:var(--ink);font:inherit;outline:none}\n.dm-form button{margin:0;flex:0 0 auto;background:linear-gradient(135deg,var(--a2),var(--a));color:#fff;border-radius:999px;padding:9px 18px}\n.dm-notes>div{background:rgba(255,255,255,.07);border-radius:16px 16px 16px 4px;padding:7px 12px;margin-top:8px;font-size:.93rem;word-break:break-word;width:fit-content;max-width:90%}\n.dm-notes small{color:var(--a2);margin-right:6px;font-weight:800}\n.dm-foot{margin-top:22px;text-align:center}\n@keyframes dmpop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}\n@keyframes dmcard{from{opacity:0;transform:translateX(40px) rotate(4deg)}to{opacity:1;transform:none}}\n@keyframes dmbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}\n@keyframes dmfloat{0%{transform:translateY(0) rotate(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-190px) rotate(25deg);opacity:0}}\n@media(max-width:520px){.dm-ans{gap:12px}.dm-ans button{width:82px;height:82px}.dm-text{font-size:1.3rem}.dm-card{margin-left:4px;margin-right:4px}}";
+var CSS=".dm{--a:#c04dff;--a2:#ff4fa3;--glow:rgba(192,77,255,.32);--ink2:#f1dcff;max-width:720px;margin:0 auto;padding:6px 0 34px;font-family:inherit}\n.dm *{box-sizing:border-box}\n.dm button{font:inherit;font-weight:700;border:0;border-radius:14px;cursor:pointer;transition:transform .12s,filter .12s,box-shadow .15s}\n.dm button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.1)}\n.dm button:active:not(:disabled){transform:scale(.97)}\n.dm button:disabled{opacity:.35;cursor:default}\n.dm-title{font-weight:800;font-size:1.55rem;letter-spacing:.02em;text-align:center;background:linear-gradient(90deg,#ff4fa3,#c04dff,#8f6bff);-webkit-background-clip:text;background-clip:text;color:transparent;margin:2px 0 10px;filter:drop-shadow(0 4px 14px rgba(192,77,255,.45))}\n.dm-box{position:relative;background:linear-gradient(150deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:24px;padding:22px;margin:12px 0;box-shadow:var(--shadow),0 0 50px rgba(192,77,255,.12);animation:dmpop .3s}\n.dm-box h2{margin:.1em 0;font-size:1.5rem}\n.dm-sub{color:var(--dim);font-size:.95rem;margin:6px 0 10px;line-height:1.45}\n.dm h3{margin:18px 0 8px;color:var(--ink2);font-size:.82rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}\n.dm-chips{display:flex;flex-wrap:wrap;gap:10px}\n.dm-chip{padding:10px 18px;border-radius:999px;border:1.5px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);font-weight:700;font-size:.95rem;margin:0;width:auto;box-shadow:none}\n.dm-chip.on{background:linear-gradient(135deg,var(--a),var(--a2));color:#fff;border-color:transparent;box-shadow:0 6px 20px var(--glow)}\nspan.dm-chip{display:inline-block}\n.dm-n{min-width:92px;padding:16px 18px;border-radius:18px;font-size:1.05rem;text-align:center}\n.dm-big{display:block;width:100%;background:linear-gradient(135deg,var(--a2),var(--a));color:#fff;margin:18px 0 0;padding:16px;font-size:1.12rem;box-shadow:0 10px 28px var(--glow)}\n.dm-prog{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.9rem;font-weight:700;color:var(--dim)}\n.dm-prog span{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:999px;padding:5px 14px}\n.dm-bar{position:relative;height:12px;background:rgba(255,255,255,.08);border-radius:999px;margin:10px 0 18px;overflow:visible}\n.dm-bar>i{position:relative;display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--a2),var(--a));transition:width .3s;box-shadow:0 0 14px var(--glow)}\n.dm-bar>i::after{content:\"\\2764\\FE0F\";position:absolute;right:-9px;top:-7px;font-size:1.05rem;animation:dmbeat 1s infinite}\n.dm-card{position:relative;text-align:center;min-height:250px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:30px 24px;margin:6px 14px 22px;border:2px solid transparent;border-radius:28px;background:linear-gradient(150deg,var(--card2),var(--card)) padding-box,linear-gradient(135deg,var(--a2),var(--a),var(--guest)) border-box;box-shadow:0 18px 44px rgba(0,0,0,.45),0 0 44px var(--glow),0 14px 0 -6px var(--card2),0 28px 0 -12px var(--card);animation:dmcard .35s cubic-bezier(.2,.9,.3,1.2)}\n.dm-tag{font-size:.78rem;font-weight:800;letter-spacing:.1em;color:#fff;background:linear-gradient(135deg,var(--a),var(--a2));border-radius:999px;padding:5px 14px}\n.dm-text{font-size:1.6rem;line-height:1.38;font-weight:700;color:#fff;word-break:break-word;text-shadow:0 2px 18px rgba(192,77,255,.4)}\n.dm-ans{display:flex;justify-content:center;gap:22px;margin-top:4px}\n.dm-ans button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:96px;height:96px;border-radius:50%;padding:0;margin:0;font-size:.95rem;font-weight:800;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.4)}\n.dm-ans button::before{font-size:1.9rem;line-height:1}\n.dm-yes{background:linear-gradient(135deg,#34d399,#16a34a)}.dm-yes::before{content:\"\\2705\"}.dm-yes:hover:not(:disabled){box-shadow:0 0 34px rgba(74,222,128,.7)}\n.dm-maybe{background:linear-gradient(135deg,#ffd166,#f59e0b);color:#3a2400!important}.dm-maybe::before{content:\"\\1F914\"}.dm-maybe:hover:not(:disabled){box-shadow:0 0 34px rgba(255,209,102,.7)}\n.dm-no{background:linear-gradient(135deg,#ff6b7a,#be1e3c)}.dm-no::before{content:\"\\274C\"}.dm-no:hover:not(:disabled){box-shadow:0 0 34px rgba(255,90,106,.7)}\n.dm-sec{display:flex;gap:10px;justify-content:center;margin-top:20px}\n.dm-sec button{margin:0;background:rgba(255,255,255,.07);color:var(--ink);border:1px solid var(--line);font-size:.9rem;padding:9px 16px;box-shadow:none}\n.dm-keys{color:var(--dim);font-size:.8rem;text-align:center;margin-top:12px;opacity:.85}\n.dm-empty{text-align:center;color:var(--ink2);padding:34px 14px;font-size:1.1rem}\n.dm-empty>div:first-child::before{content:\"\\1F496\";display:block;font-size:3.4rem;margin-bottom:8px;animation:dmbeat 1.1s infinite}\n.dm-hero{text-align:center;position:relative;overflow:hidden;padding:10px 0 6px}\n.dm-hero h2{font-size:2.2rem;background:linear-gradient(90deg,#ff4fa3,var(--gold),var(--a));-webkit-background-clip:text;background-clip:text;color:transparent}\n.dm-hearts{position:absolute;inset:0;pointer-events:none;overflow:hidden}\n.dm-hearts i{position:absolute;bottom:-20px;font-style:normal;font-size:1.3rem;opacity:0;animation:dmfloat 4.5s infinite}\n.dm-grp{margin-top:22px}\n.dm-grp>h2{font-size:1.25rem;margin:0 0 10px;color:#fff}\n.dm-item{background:linear-gradient(150deg,rgba(192,77,255,.14),rgba(255,209,102,.07));border:1px solid rgba(255,209,102,.28);border-radius:18px;padding:16px;margin:12px 0}\n.dm-item.hot{background:linear-gradient(150deg,rgba(255,79,163,.28),rgba(192,77,255,.2));border-color:var(--a2);box-shadow:0 0 26px rgba(255,79,163,.3)}\n.dm-meta{color:var(--dim);font-size:.78rem;font-weight:700;margin-bottom:6px}\n.dm-it{font-size:1.12rem;font-weight:700;color:#fff;word-break:break-word}\n.dm-form{display:flex;gap:8px;margin-top:12px;background:rgba(8,8,24,.55);border:1px solid var(--line);border-radius:999px;padding:4px}\n.dm-form input{flex:1;margin:0;border:0;background:transparent;box-shadow:none;padding:9px 14px;border-radius:999px;color:var(--ink);font:inherit;outline:none}\n.dm-form button{margin:0;flex:0 0 auto;background:linear-gradient(135deg,var(--a2),var(--a));color:#fff;border-radius:999px;padding:9px 18px}\n.dm-notes>div{background:rgba(255,255,255,.07);border-radius:16px 16px 16px 4px;padding:7px 12px;margin-top:8px;font-size:.93rem;word-break:break-word;width:fit-content;max-width:90%}\n.dm-notes small{color:var(--a2);margin-right:6px;font-weight:800}\n.dm-foot{margin-top:22px;text-align:center}\n.dm-desc{color:var(--ink2);font-size:1rem;line-height:1.45;margin-top:6px;max-width:520px}\n.dm-card .dm-desc{margin:0 auto}\n.dm-ptags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}\n.dm-card .dm-ptags{justify-content:center}\n.dm-ptags span{font-size:.75rem;font-weight:700;color:var(--ink2);background:rgba(192,77,255,.18);border:1px solid rgba(192,77,255,.4);border-radius:999px;padding:3px 10px}\n@keyframes dmpop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}\n@keyframes dmcard{from{opacity:0;transform:translateX(40px) rotate(4deg)}to{opacity:1;transform:none}}\n@keyframes dmbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}\n@keyframes dmfloat{0%{transform:translateY(0) rotate(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-190px) rotate(25deg);opacity:0}}\n@media(max-width:520px){.dm-ans{gap:12px}.dm-ans button{width:82px;height:82px}.dm-text{font-size:1.3rem}.dm-card{margin-left:4px;margin-right:4px}}";
 
 /* ---------- UI ---------- */
 function GAME_START(ctx){
@@ -338,7 +608,8 @@ function GAME_START(ctx){
     var c=el('div','dm-box dm-card');
     var ci=catInfo(card.cat);
     c.appendChild(el('span','dm-tag',ci.icon+' '+ci.name.toUpperCase()+' · '+LVI[card.lvl]+' '+LV[card.lvl].toUpperCase()));
-    c.appendChild(el('div','dm-text',fillText(card.text,nm(partner))));
+    c.appendChild(el('div','dm-text',(card.cat==='pos'?'Try: ':'')+fillText(card.text,nm(partner))));
+    posExtra(c,card);
     wrap.appendChild(c);
     var a=el('div','dm-ans');
     a.appendChild(btn('Yes','dm-yes',function(){answer('y')}));
@@ -395,11 +666,22 @@ function GAME_START(ctx){
     });
     return f;
   }
+  /* positions: one-line setup + optional tags (text only) */
+  function posExtra(parent,c){
+    if(c.cat!=='pos')return;
+    if(c.desc)parent.appendChild(el('div','dm-desc',fillText(c.desc,nm(partner))));
+    if(c.tags&&c.tags.length){
+      var t=el('div','dm-ptags');
+      c.tags.forEach(function(x){t.appendChild(el('span',null,x))});
+      parent.appendChild(t);
+    }
+  }
   function item(id,hot){
     var c=ALL[id],ci=catInfo(c.cat);
     var d=el('div','dm-item'+(hot?' hot':''));
     d.appendChild(el('div','dm-meta',ci.icon+' '+ci.name+' · '+LVI[c.lvl]+' '+LV[c.lvl]));
     d.appendChild(el('div','dm-it',fillText(c.text,nm(partner))));
+    posExtra(d,c);
     d.appendChild(noteForm(id));
     d.appendChild(noteBox(id));
     return d;

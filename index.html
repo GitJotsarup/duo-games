@@ -86,7 +86,6 @@ button:disabled{opacity:.4;cursor:default}
   <h1>Pick a game</h1>
   <p class="sub" id="menuwho"></p>
   <div class="games">
-    <button class="gcard" data-game="party" data-icon="🎉" style="--acc:#ff5c8a">Party Mode<small>5 rapid mini-games: Coin Grab, Reaction Duel, Tug of War. Most wins takes the crown.</small></button>
   </div>
   <div class="games" id="customgames" style="margin-top:12px"></div>
 </section>
@@ -366,7 +365,7 @@ function loop(t){
 requestAnimationFrame(loop);
 
 /* ---------- custom game plugins ---------- */
-const ACC={battleship:'#3aa0ff',sequence:'#f5b942',monopolydeal:'#2ecc71',taboo:'#ff7a45',cah:'#8b8ba7',allegiance:'#e0455f',spicy:'#ff4d6d',match:'#c04dff'};
+const ACC={battleship:'#3aa0ff',sequence:'#f5b942',monopolydeal:'#2ecc71',taboo:'#ff7a45',cah:'#8b8ba7',allegiance:'#e0455f',spicy:'#ff4d6d',match:'#c04dff',rush:'#ff5c8a',strangers:'#d9534f',copilots:'#3b82f6',samosa:'#ff9f1c',kitchen:'#2ec4b6',wedding:'#c9184a',colorlab:'#7b2cbf'};
 function registerGame(g){GAMES[g.id]=g;renderCustomMenu()}
 function renderCustomMenu(){
   $('#customgames').innerHTML=Object.values(GAMES).map(g=>`<button class="gcard" data-game="${g.id}" data-icon="${g.icon||'🎮'}" style="--acc:${ACC[g.id]||'#9b6bff'}">${g.name}<small>${g.blurb}</small></button>`).join('');
@@ -391,6 +390,13 @@ $('#name').onchange=()=>{try{localStorage.setItem('duoname',$('#name').value)}ca
 const jp=new URLSearchParams(location.search).get('join');
 if(jp){$('#joincode').value=jp.toUpperCase();$('#btn-join').textContent='Join room '+jp.toUpperCase();$('#btn-create').hidden=true;$('#joinlabel').textContent='You were invited! Type your name above, then join.';$('#name').focus()}
 </script>
+<script src="games/party.js"></script>
+<script src="games/party/mg-core.js"></script>
+<script src="games/party/mg-arena.js"></script>
+<script src="games/party/mg-reflex.js"></script>
+<script src="games/party/mg-race.js"></script>
+<script src="games/party/mg-brain.js"></script>
+<script src="games/party/mg-sports.js"></script>
 <script src="games/battleship.js"></script>
 <script src="games/sequence.js"></script>
 <script src="games/monopolydeal.js"></script>
@@ -399,5 +405,11 @@ if(jp){$('#joincode').value=jp.toUpperCase();$('#btn-join').textContent='Join ro
 <script src="games/allegiance.js"></script>
 <script src="games/spicy.js"></script>
 <script src="games/match.js"></script>
+<script src="games/strangers.js"></script>
+<script src="games/copilots.js"></script>
+<script src="games/samosa.js"></script>
+<script src="games/kitchen.js"></script>
+<script src="games/wedding.js"></script>
+<script src="games/colorlab.js"></script>
 </body>
 </html>
