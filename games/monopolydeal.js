@@ -217,8 +217,13 @@ var MonopolyDealRules = (function () {
     var G = { deck: order.slice(), disc: [], hand: { host: [], guest: [] }, bank: { host: [], guest: [] },
       sets: { host: [], guest: [] }, owe: { host: 0, guest: 0 }, turn: 'host', plays: 3, pend: null, winner: null,
       log: [], nsid: 1, reshuf: 0, names: names, seed: seed | 0 };
-    for (var i = 0; i < 5; i++) { draw(G, 'host', 1); draw(G, 'guest', 1); }
-    log(G, '🎩', 'No Mercy! ' + nm(G, 'host') + ' goes first.');
+    /* fair start: a seeded coin flip (identical on both clients) decides who goes first;
+       the second player is dealt first, as a dealer would. */
+    var x = (G.seed ^ 0x9e3779b9) >>> 0; x = Math.imul(x ^ (x >>> 16), 0x45d9f3b); x = Math.imul(x ^ (x >>> 16), 0x45d9f3b); x = (x ^ (x >>> 16)) >>> 0;
+    var first = (x & 1) ? 'guest' : 'host', second = other(first);
+    G.turn = first;
+    for (var i = 0; i < 5; i++) { draw(G, second, 1); draw(G, first, 1); }
+    log(G, '🎩', 'No Mercy! ' + nm(G, first) + ' goes first (coin flip).');
     startTurn(G);
     return G;
   }
