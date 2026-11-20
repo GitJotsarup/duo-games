@@ -365,7 +365,7 @@ function loop(t){
 requestAnimationFrame(loop);
 
 /* ---------- custom game plugins ---------- */
-const ACC={battleship:'#3aa0ff',sequence:'#f5b942',monopolydeal:'#2ecc71',taboo:'#ff7a45',cah:'#8b8ba7',allegiance:'#e0455f',spicy:'#ff4d6d',match:'#c04dff',rush:'#ff5c8a',strangers:'#d9534f',copilots:'#3b82f6',samosa:'#ff9f1c',kitchen:'#2ec4b6',wedding:'#c9184a',colorlab:'#7b2cbf','crazy-golf':'#2d9a4e','pong-royale':'#00b4d8',knowus:'#f72585'};
+const ACC={battleship:'#3aa0ff',sequence:'#f5b942',monopolydeal:'#2ecc71',taboo:'#ff7a45',cah:'#8b8ba7',allegiance:'#e0455f',spicy:'#ff4d6d',match:'#c04dff',rush:'#ff5c8a',strangers:'#d9534f',samosa:'#ff9f1c',wedding:'#c9184a',colorlab:'#7b2cbf','crazy-golf':'#2d9a4e','pong-royale':'#00b4d8',knowus:'#f72585',rehmat22:'#ffb703'};
 function registerGame(g){GAMES[g.id]=g;renderCustomMenu()}
 function renderCustomMenu(){
   $('#customgames').innerHTML=Object.values(GAMES).map(g=>`<button class="gcard" data-game="${g.id}" data-icon="${g.icon||'🎮'}" style="--acc:${ACC[g.id]||'#9b6bff'}">${g.name}<small>${g.blurb}</small></button>`).join('');
@@ -408,9 +408,7 @@ if(jp){$('#joincode').value=jp.toUpperCase();$('#btn-join').textContent='Join ro
 <script src="games/spicy.js"></script>
 <script src="games/match.js"></script>
 <script src="games/strangers.js"></script>
-<script src="games/copilots.js"></script>
 <script src="games/samosa.js"></script>
-<script src="games/kitchen.js"></script>
 <script src="games/wedding.js"></script>
 <script src="games/colorlab.js"></script>
 <script src="games/knowus.js"></script>
