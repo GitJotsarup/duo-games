@@ -153,10 +153,26 @@
     '.pr-coin b{display:block;font-size:2rem}.pr-coin.h b{color:var(--host)}.pr-coin.g b{color:var(--guest)}' +
     '.pr-coin.lead{box-shadow:0 0 0 2px var(--gold)}';
 
+  /* Standalone mode: PARTY.standalone({...minigame def..., blurb, accent}) registers a minigame as its
+     own menu game (one match per play, ready screen for both, same netcode + latency equalisation).
+     Standalone games are excluded from the Party Rush random pool. */
+  PARTY.standalone = function (def) {
+    def.standalone = true;
+    PARTY.add(def);
+    registerGame({
+      id: def.id, icon: def.icon, name: def.name, blurb: def.blurb || def.howto,
+      start: function (ctx) { return startRush(ctx, { list: [def.id], title: def.icon + ' ' + def.name }); }
+    });
+  };
   registerGame({
     id: 'rush', icon: '🎉', name: 'Party Rush',
     blurb: 'A 5-game rush picked from 35 Mario-Party-style minigames. Both ready up before every game.',
-    start: function (ctx) {
+    start: function (ctx) { return startRush(ctx, {}); }
+  });
+
+  function startRush(ctx, opts) {
+      opts = opts || {};
+      var solo = !!opts.list, ROUNDS = solo ? opts.list.length : 5;
       var me = ctx.me, isHost = ctx.isHost, partner = me === 'host' ? 'guest' : 'host';
       var names = ctx.names, root = ctx.root;
       var rnd = rngFrom(ctx.seed ^ 0x51ed27);
@@ -176,11 +192,11 @@
 
       function pickRandom() {
         var r = rngFrom(ctx.seed + 991 * (M.reroll + 1));
-        var ids = PARTY.games.map(function (g) { return g.id; });
+        var ids = PARTY.games.filter(function (g) { return !g.standalone; }).map(function (g) { return g.id; });
         for (var i = ids.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = ids[i]; ids[i] = ids[j]; ids[j] = t; }
         return ids.slice(0, ROUNDS);
       }
-      if (isHost) M.list = pickRandom();
+      if (isHost) { if (solo) { M.list = opts.list.slice(); M.ph = 'howto'; } else M.list = pickRandom(); }
 
       /* ---------- networking ---------- */
       function pushMeta() { M.v++; ctx.send({ k: 'm', m: M }); render(); }
@@ -286,7 +302,7 @@
       function endAll() {
         if (ended) return; ended = true;
         var h = M.sc.host, gg = M.sc.guest;
-        var t = h === gg ? 'Dead heat! 🤝' : ((h > gg ? 'host' : 'guest') === me ? 'You win Party Rush! 👑' : esc(names[h > gg ? 'host' : 'guest']) + ' wins Party Rush! 👑');
+        var lbl = solo ? '' : ' Party Rush'; var t = h === gg ? 'Dead heat! 🤝' : ((h > gg ? 'host' : 'guest') === me ? 'You win' + lbl + '! 👑' : esc(names[h > gg ? 'host' : 'guest']) + ' wins' + lbl + '! 👑');
         var wins = { host: 0, guest: 0 }; M.hist.forEach(function (x) { if (x.w !== 'tie') wins[x.w]++; });
         ctx.end(t, names.host + ' ' + h + ' coins (' + wins.host + ' wins) - ' + names.guest + ' ' + gg + ' coins (' + wins.guest + ' wins)');
       }
@@ -393,8 +409,8 @@
         var key = M.ph + '|' + M.r + '|' + M.v;
         if (key === lastKey && (M.ph === 'play' || M.ph === 'count')) return;
         lastKey = key;
-        var top = '<div class="pr-top"><span class="pr-title">🎉 Party Rush</span>' +
-          (M.ph !== 'lobby' ? '<span class="pr-pill">Game ' + Math.min(M.r + 1, ROUNDS) + ' / ' + ROUNDS + '</span>' : '') + scorePill() + '</div>';
+        var top = '<div class="pr-top"><span class="pr-title">' + (solo ? esc(opts.title) : '🎉 Party Rush') + '</span>' +
+          (M.ph !== 'lobby' && !solo ? '<span class="pr-pill">Game ' + Math.min(M.r + 1, ROUNDS) + ' / ' + ROUNDS + '</span>' : '') + (solo ? '' : scorePill()) + '</div>';
         var h = top;
         if (M.ph === 'lobby') {
           h += '<div class="pr-panel"><h2>Tonight\'s lineup</h2>' +
@@ -472,6 +488,5 @@
         },
         _t: { M: function () { return M; }, S: function () { return S; } }
       };
-    }
-  });
+  }
 })();
