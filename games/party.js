@@ -433,7 +433,7 @@
           h += '</div>';
         } else if (M.ph === 'howto') {
           var g = byId(M.list[M.r]);
-          h += lineup() + '<div class="pr-panel"><div class="pr-big">' + g.icon + '</div><h2>' + esc(g.name) + '</h2>' +
+          h += (solo ? '' : lineup()) + '<div class="pr-panel"><div class="pr-big">' + g.icon + '</div><h2>' + esc(g.name) + '</h2>' +
             '<p class="pr-how">' + esc(g.howto) + '</p><div class="pr-ctl">🎮 ' + esc(g.controls) + '</div>' + readyRow() +
             '<button class="big pink pr-ready-btn"' + (M.ready[me] ? ' disabled' : '') + '>' + (M.ready[me] ? 'Waiting for ' + esc(names[partner]) + '…' : "I'm ready!") + '</button></div>';
         } else if (M.ph === 'count' || M.ph === 'play' || M.ph === 'result') {
@@ -448,7 +448,7 @@
               '<button class="big pink pr-next"' + (M.ready[me] ? ' disabled' : '') + '>' + (M.ready[me] ? 'Waiting for ' + esc(names[partner]) + '…' : (M.r + 1 >= M.list.length ? 'See final results' : 'Next game')) + '</button></div>';
           }
         } else if (M.ph === 'final') {
-          h += lineup() + '<div class="pr-panel"><div class="pr-big">👑</div><h2>Party Rush complete!</h2>' +
+          h += (solo ? '' : lineup()) + '<div class="pr-panel"><div class="pr-big">👑</div><h2>Party Rush complete!</h2>' +
             '<div class="pr-coins"><div class="pr-coin h">' + esc(names.host) + '<b>' + M.sc.host + ' 🪙</b></div><div class="pr-coin g">' + esc(names.guest) + '<b>' + M.sc.guest + ' 🪙</b></div></div></div>';
         }
         var hadCv = !!cv;
